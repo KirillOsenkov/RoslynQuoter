@@ -7,6 +7,7 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Exts;
 
 /// <summary>
 /// A tool that for a given C# program constructs Roslyn API calls to create a syntax tree that
@@ -40,17 +41,16 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 /// </example>
 public class Quoter
 {
-    public bool OpenParenthesisOnNewLine { get; set; }
-    public bool ClosingParenthesisOnNewLine { get; set; }
-    public bool UseDefaultFormatting { get; set; }
-    public bool RemoveRedundantModifyingCalls { get; set; }
+    public bool OpenParenthesisOnNewLine      { get; private set; }
+    public bool ClosingParenthesisOnNewLine   { get; private set; }
+    public bool UseDefaultFormatting          { get; private set; }
+    public bool RemoveRedundantModifyingCalls { get; private set; }
 
-    public Quoter()
+    public Quoter (bool useDefaultFormatting = true, bool removeRedundantModifyingCalls = true )
     {
-        UseDefaultFormatting = true;
-        RemoveRedundantModifyingCalls = true;
+        UseDefaultFormatting          = useDefaultFormatting;
+        RemoveRedundantModifyingCalls = removeRedundantModifyingCalls;
     }
-
     /// <summary>
     /// Given the input C# program <paramref name="sourceText"/> returns the C# source code of
     /// Roslyn API calls that recreate the syntax tree for the input program.
@@ -58,10 +58,10 @@ public class Quoter
     /// <param name="sourceText">A C# program (one compilation unit)</param>
     /// <returns>A C# expression that describes calls to the Roslyn syntax API necessary to recreate
     /// the syntax tree for the source program.</returns>
-    public string Quote(string sourceText)
+    public string Quote ( string sourceText )
     {
         var sourceTree = CSharpSyntaxTree.ParseText(sourceText);
-        return Quote(sourceTree.GetRoot());
+        return Quote( sourceTree.GetRoot( ) );
     }
 
     /// <summary>
@@ -71,16 +71,11 @@ public class Quoter
     /// <param name="sourceText">A C# syntax node</param>
     /// <returns>A C# expression that describes calls to the Roslyn syntax API necessary to recreate
     /// the input syntax node.</returns>
-    public string Quote(SyntaxNode node)
+    public string Quote ( SyntaxNode node )
     {
         ApiCall rootApiCall = Quote(node, name: null);
-        if (UseDefaultFormatting)
-        {
-            rootApiCall.Add(new MethodCall { Name = ".NormalizeWhitespace" });
-        }
-
-        string generatedCode = Print(rootApiCall);
-        return generatedCode;
+        if ( UseDefaultFormatting )  rootApiCall.Add( new MethodCall( ".NormalizeWhitespace") );
+        return Print(rootApiCall);
     }
 
     /// <summary>
@@ -110,52 +105,29 @@ public class Quoter
     /// Recursive method that "quotes" a SyntaxNode, SyntaxToken, SyntaxTrivia or other objects.
     /// </summary>
     /// <returns>A description of Roslyn API calls necessary to recreate the input object.</returns>
-    private ApiCall Quote(object treeElement, string name = null)
+    private ApiCall Quote ( object treeElement, string name = null )
     {
-        if (treeElement is SyntaxTrivia)
-        {
-            return QuoteTrivia((SyntaxTrivia)treeElement);
-        }
-
-        if (treeElement is SyntaxToken)
-        {
-            return QuoteToken((SyntaxToken)treeElement, name);
-        }
-
-        if (treeElement is SyntaxNodeOrToken)
+        if ( treeElement is SyntaxTrivia )         return QuoteTrivia( (SyntaxTrivia)treeElement );
+        if ( treeElement is SyntaxToken  )         return QuoteToken( (SyntaxToken)treeElement, name );
+        if ( treeElement is SyntaxNodeOrToken )
         {
             SyntaxNodeOrToken syntaxNodeOrToken = (SyntaxNodeOrToken)treeElement;
-            if (syntaxNodeOrToken.IsNode)
-            {
-                return QuoteNode(syntaxNodeOrToken.AsNode(), name);
-            }
-            else
-            {
-                return QuoteToken(syntaxNodeOrToken.AsToken(), name);
-            }
+            return syntaxNodeOrToken.IsNode ? QuoteNode( syntaxNodeOrToken.AsNode( ), name ) : QuoteToken( syntaxNodeOrToken.AsToken( ), name );
         }
-
-        return QuoteNode((SyntaxNode)treeElement, name);
+        return QuoteNode( (SyntaxNode)treeElement, name );
     }
 
     /// <summary>
     /// The main recursive method that given a SyntaxNode recursively quotes the entire subtree.
     /// </summary>
-    private ApiCall QuoteNode(SyntaxNode node, string name)
+    private ApiCall QuoteNode ( SyntaxNode node, string name )
     {
         List<ApiCall> quotedPropertyValues = QuotePropertyValues(node);
-        MethodInfo factoryMethod = PickFactoryMethodToCreateNode(node);
-
-        var factoryMethodCall = new MethodCall()
-        {
-            Name = factoryMethod.DeclaringType.Name + "." + factoryMethod.Name
-        };
-
-        var codeBlock = new ApiCall(name, factoryMethodCall);
-
-        AddFactoryMethodArguments(factoryMethod, factoryMethodCall, quotedPropertyValues);
-        AddModifyingCalls(node, codeBlock, quotedPropertyValues);
-
+        MethodInfo           factoryMethod = PickFactoryMethodToCreateNode(node);
+        var factoryMethodCall = new MethodCall(factoryMethod.DeclaringType.Name + "." + factoryMethod.Name);
+        var         codeBlock = new ApiCall(name, factoryMethodCall);
+        AddFactoryMethodArguments( factoryMethod, factoryMethodCall, quotedPropertyValues );
+        AddModifyingCalls( node, codeBlock, quotedPropertyValues );
         return codeBlock;
     }
 
@@ -164,39 +136,29 @@ public class Quoter
     /// creates API call descriptions for the property values recursively. Properties that are not
     /// essential to the shape of the syntax tree (such as Span) are ignored.
     /// </summary>
-    private List<ApiCall> QuotePropertyValues(SyntaxNode node)
+    private List<ApiCall> QuotePropertyValues ( SyntaxNode node )
     {
         var result = new List<ApiCall>();
-
         var properties = node.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
         // Filter out non-essential properties listed in nonStructuralProperties
-        result.AddRange(properties
-            .Where(propertyInfo => !nonStructuralProperties.Contains(propertyInfo.Name))
-            .Select(propertyInfo => QuotePropertyValue(node, propertyInfo))
-            .Where(apiCall => apiCall != null));
+        result.AddRange( properties.Where( propertyInfo => !nonStructuralProperties.Contains( propertyInfo.Name ) )
+                                   .Select( propertyInfo => QuotePropertyValue( node, propertyInfo ) )
+                                   .Where( apiCall => apiCall != null ) );
 
         // HACK: factory methods for the following node types accept back the first "kind" parameter
         // that we filter out above. Add an artificial "property value" that can be later used to
         // satisfy the first parameter of type SyntaxKind.
-        if (node is AccessorDeclarationSyntax ||
-            node is BinaryExpressionSyntax ||
-            node is ClassOrStructConstraintSyntax ||
-            node is CheckedExpressionSyntax ||
-            node is CheckedStatementSyntax ||
-            node is ConstructorInitializerSyntax ||
-            node is GotoStatementSyntax ||
-            node is InitializerExpressionSyntax ||
-            node is LiteralExpressionSyntax ||
-            node is MemberAccessExpressionSyntax ||
-            node is OrderingSyntax ||
-            node is PostfixUnaryExpressionSyntax ||
-            node is PrefixUnaryExpressionSyntax ||
-            node is DocumentationCommentTriviaSyntax ||
-            node is SwitchLabelSyntax ||
-            node is YieldStatementSyntax)
+        if ( node is AccessorDeclarationSyntax      ||  node is BinaryExpressionSyntax            ||
+             node is ClassOrStructConstraintSyntax  ||  node is CheckedExpressionSyntax           ||
+             node is CheckedStatementSyntax         ||  node is ConstructorInitializerSyntax      ||
+             node is GotoStatementSyntax            ||  node is InitializerExpressionSyntax       ||
+             node is LiteralExpressionSyntax        ||  node is MemberAccessExpressionSyntax      ||
+             node is OrderingSyntax                 ||  node is PostfixUnaryExpressionSyntax      ||
+             node is PrefixUnaryExpressionSyntax    ||  node is DocumentationCommentTriviaSyntax  ||
+             node is SwitchLabelSyntax              ||  node is YieldStatementSyntax )
         {
-            result.Add(new ApiCall("Kind", "SyntaxKind." + node.CSharpKind().ToString()));
+            result.Add( new ApiCall( "Kind", "SyntaxKind." + node.CSharpKind( ).ToString( ) ) );
         }
 
         return result;
@@ -206,435 +168,234 @@ public class Quoter
     /// Quote the value of the property <paramref name="property"/> of object <paramref
     /// name="node"/>
     /// </summary>
-    private ApiCall QuotePropertyValue(SyntaxNode node, PropertyInfo property)
+    private ApiCall QuotePropertyValue ( SyntaxNode node, PropertyInfo property )
     {
         var value = property.GetValue(node, null);
-        var propertyType = property.PropertyType;
-
-        if (propertyType == typeof(SyntaxToken))
-        {
-            return QuoteToken((SyntaxToken)value, property.Name);
-        }
-
-        if (propertyType == typeof(SyntaxTokenList))
-        {
-            return QuoteList((IEnumerable)value, property.Name);
-        }
-
-        if (propertyType.IsGenericType &&
-            (propertyType.GetGenericTypeDefinition() == typeof(SyntaxList<>) ||
-             propertyType.GetGenericTypeDefinition() == typeof(SeparatedSyntaxList<>)))
-        {
-            return QuoteList((IEnumerable)value, property.Name);
-        }
-
-        if (value is SyntaxNode)
-        {
-            return QuoteNode((SyntaxNode)value, property.Name);
-        }
-
-        if (value is string)
-        {
-            return new ApiCall(property.Name, "\"" + Escape(value.ToString()) + "\"");
-        }
-
-        if (value is bool)
-        {
-            return new ApiCall(property.Name, value.ToString().ToLowerInvariant());
-        }
-
+        var pType = property.PropertyType;
+        if ( pType == typeof(SyntaxToken) )      return QuoteToken( (SyntaxToken)value, property.Name );
+        if ( pType == typeof(SyntaxTokenList) )  return QuoteList( (IEnumerable)value, property.Name );
+        if ( pType.IsGenericType &&
+              ( pType.GetGenericTypeDefinition() == typeof(SyntaxList<>) ||
+                pType.GetGenericTypeDefinition() == typeof(SeparatedSyntaxList<>) ) )   return QuoteList( (IEnumerable)value, property.Name );
+        if ( value is SyntaxNode )   return QuoteNode( (SyntaxNode)value, property.Name );
+        if ( value is string )       return new ApiCall( property.Name, "\"" + Escape( value.ToString( ) ) + "\"" );
+        if ( value is bool )         return new ApiCall( property.Name, value.ToString( ).ToLowerInvariant( ) );
         return null;
     }
 
-    private ApiCall QuoteList(IEnumerable syntaxList, string name)
+    private ApiCall QuoteList ( IEnumerable syntaxList, string name )
     {
         IEnumerable<object> sourceList = syntaxList.Cast<object>();
-
-        string methodName = "SyntaxFactory.List";
+        string    mName = "SyntaxFactory.List";
         string listType = null;
-        var propertyType = syntaxList.GetType();
-        if (propertyType.IsGenericType)
+        var pType = syntaxList.GetType();
+        if ( pType.IsGenericType )
         {
-            var methodType = propertyType.GetGenericArguments()[0].Name;
-            listType = methodType;
+            var mType = pType.GetGenericArguments()[0].Name;
+            listType = mType;
 
-            if (propertyType.GetGenericTypeDefinition() == typeof(SeparatedSyntaxList<>))
+            if ( pType.GetGenericTypeDefinition() == typeof(SeparatedSyntaxList<>) )
             {
-                listType = "SyntaxNodeOrToken";
-                methodName = "SyntaxFactory.SeparatedList";
-                sourceList = ((SyntaxNodeOrTokenList)
-                    syntaxList.GetType().GetMethod("GetWithSeparators").Invoke(syntaxList, null))
-                    .Cast<object>()
-                    .ToArray();
+                listType   = "SyntaxNodeOrToken";
+                mName      = "SyntaxFactory.SeparatedList";
+                sourceList = ( (SyntaxNodeOrTokenList)
+                syntaxList.GetType( ).GetMethod( "GetWithSeparators" ).Invoke(syntaxList,null)) .Cast<object>().ToArray( );
             }
-
-            methodName += "<" + methodType + ">";
+            mName += "<" + mType + ">";
         }
-
-        if (propertyType.Name == "SyntaxTokenList")
-        {
-            methodName = "SyntaxFactory.TokenList";
-        }
-
-        if (propertyType.Name == "SyntaxTriviaList")
-        {
-            methodName = "SyntaxFactory.TriviaList";
-        }
-
-        var elements = new List<object>(sourceList
-            .Select(o => Quote(o))
-            .Where(cb => cb != null));
-        if (elements.Count == 0)
-        {
-            return null;
-        }
-        else if (elements.Count == 1)
-        {
-            methodName = methodName.Replace(".List", ".SingletonList");
-            methodName = methodName.Replace(".SeparatedList", ".SingletonSeparatedList");
-        }
-        else
-        {
-            elements = new List<object>
-            {
-                new ApiCall(
-                    "methodName",
-                    "new " + listType + "[]",
-                    elements,
-                    useCurliesInsteadOfParentheses: true)
-            };
-        }
-
-        var codeBlock = new ApiCall(name, methodName, elements);
+        if ( pType.Name == "SyntaxTokenList"  )  mName = "SyntaxFactory.TokenList";
+        if ( pType.Name == "SyntaxTriviaList" )  mName = "SyntaxFactory.TriviaList";
+        var elements = ArgList.Create( sourceList.Select(o => Quote(o)).Where(cb => cb != null).ToArray());
+        if ( elements.Count == 0 ) return null;
+        if ( elements.Count == 1 ) { mName = mName.Replace( ".List", ".SingletonList" ).Replace( ".SeparatedList", ".SingletonSeparatedList" ); }
+        else                       { elements = ArgList.Create( new ApiCall("methodName", "new " + listType + "[]",  elements, useCurliesInsteadOfParentheses: true ) ); }
+        var codeBlock = new ApiCall(name, mName, elements);
         return codeBlock;
     }
 
-    private ApiCall QuoteToken(SyntaxToken value, string name)
+    private ApiCall QuoteToken ( SyntaxToken value, string name )
     {
-        if (value == default(SyntaxToken) || value.CSharpKind() == SyntaxKind.None)
-        {
-            return null;
-        }
-
-        var arguments = new List<object>();
-        string methodName = "SyntaxFactory.Token";
+        if ( value == default(SyntaxToken) || value.IsKind(SyntaxKind.None) )  {  return null;  }
+        var      args = ArgList.Create();
+        string  mName = "SyntaxFactory.Token";
         string escapedTokenValueText = "@\"" + Escape(value.ToString()) + "\"";
-        object leading = GetLeadingTrivia(value);
+        object   head = GetLeadingTrivia (value);
+        object   tail = GetTrailingTrivia(value);
         object actualValue;
-        object trailing = GetTrailingTrivia(value);
-
-        if (leading != null || trailing != null)
+        if ( head != null || tail != null )  { head = head ?? GetEmptyTrivia( "LeadingTrivia"  ); tail = tail ?? GetEmptyTrivia( "TrailingTrivia" );  }
+        if ( value.IsKind( SyntaxKind.IdentifierToken ) )
         {
-            leading = leading ?? GetEmptyTrivia("LeadingTrivia");
-            trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
+            mName = "SyntaxFactory.Identifier";
+            if ( value.IsMissing )  {  mName = "SyntaxFactory.MissingToken"; }
+            if ( value.IsMissing )  {  actualValue = value.CSharpKind( );    }
+            else                    {  actualValue = escapedTokenValueText;  }
+            args.AddIfNotNull(  head );
+            args.Add( actualValue );
+            args.AddIfNotNull( tail );
         }
-
-        if (value.CSharpKind() == SyntaxKind.IdentifierToken)
+        else if ( value.IsKindAny(SyntaxKind.XmlTextLiteralToken,
+                                  SyntaxKind.XmlTextLiteralNewLineToken,
+                                  SyntaxKind.XmlEntityLiteralToken) )
         {
-            methodName = "SyntaxFactory.Identifier";
-            if (value.IsMissing)
-            {
-                methodName = "SyntaxFactory.MissingToken";
-            }
-
-            if (value.IsMissing)
-            {
-                actualValue = value.CSharpKind();
-            }
-            else
-            {
-                actualValue = escapedTokenValueText;
-            }
-
-            AddIfNotNull(arguments, leading);
-            arguments.Add(actualValue);
-            AddIfNotNull(arguments, trailing);
+            mName = "SyntaxFactory.XmlTextLiteral";
+            if ( value.IsKind(SyntaxKind.XmlTextLiteralNewLineToken) )   {  mName = "SyntaxFactory.XmlTextNewLine"; }
+            else if ( value.IsKind( SyntaxKind.XmlEntityLiteralToken) )  {  mName = "SyntaxFactory.XmlEntity";      }
+            args.Add( head ?? GetEmptyTrivia( "LeadingTrivia" ), escapedTokenValueText, escapedTokenValueText, tail ?? GetEmptyTrivia( "TrailingTrivia" ) );
         }
-        else if (value.CSharpKind() == SyntaxKind.XmlTextLiteralToken ||
-            value.CSharpKind() == SyntaxKind.XmlTextLiteralNewLineToken ||
-            value.CSharpKind() == SyntaxKind.XmlEntityLiteralToken)
+        else if ( ( value.Parent is LiteralExpressionSyntax ||
+            value.IsKindAny(SyntaxKind.StringLiteralToken,SyntaxKind.NumericLiteralToken )) &&
+            value.IsKindNoneOf( SyntaxKind.TrueKeyword , SyntaxKind.FalseKeyword ,
+                                SyntaxKind.NullKeyword , SyntaxKind.ArgListKeyword) )
         {
-            methodName = "SyntaxFactory.XmlTextLiteral";
-            if (value.CSharpKind() == SyntaxKind.XmlTextLiteralNewLineToken)
-            {
-                methodName = "SyntaxFactory.XmlTextNewLine";
-            }
-            else if (value.CSharpKind() == SyntaxKind.XmlEntityLiteralToken)
-            {
-                methodName = "SyntaxFactory.XmlEntity";
-            }
-
-            arguments.Add(leading ?? GetEmptyTrivia("LeadingTrivia"));
-            arguments.Add(escapedTokenValueText);
-            arguments.Add(escapedTokenValueText);
-            arguments.Add(trailing ?? GetEmptyTrivia("TrailingTrivia"));
-        }
-        else if ((value.Parent is LiteralExpressionSyntax ||
-            value.CSharpKind() == SyntaxKind.StringLiteralToken ||
-            value.CSharpKind() == SyntaxKind.NumericLiteralToken) &&
-            value.CSharpKind() != SyntaxKind.TrueKeyword &&
-            value.CSharpKind() != SyntaxKind.FalseKeyword &&
-            value.CSharpKind() != SyntaxKind.NullKeyword &&
-            value.CSharpKind() != SyntaxKind.ArgListKeyword)
-        {
-            methodName = "SyntaxFactory.Literal";
-            arguments.Add(leading ?? GetEmptyTrivia("LeadingTrivia"));
-            arguments.Add(escapedTokenValueText);
+            mName = "SyntaxFactory.Literal";
+            args.Add( head ?? GetEmptyTrivia( "LeadingTrivia" ) , escapedTokenValueText );
             string escapedValue = value.ToString();
-            if (value.CSharpKind() == SyntaxKind.StringLiteralToken)
-            {
-                escapedValue = escapedTokenValueText;
-            }
-
-            arguments.Add(escapedValue);
-            arguments.Add(trailing ?? GetEmptyTrivia("TrailingTrivia"));
+            if ( value.IsKind(SyntaxKind.StringLiteralToken ))  escapedValue = escapedTokenValueText;
+            args.Add( escapedValue , tail ?? GetEmptyTrivia( "TrailingTrivia" ) );
         }
         else
         {
-            if (value.IsMissing)
+            if ( value.IsMissing )  {  mName = "SyntaxFactory.MissingToken"; }
+            if ( value.IsKind(SyntaxKind.BadToken ))
             {
-                methodName = "SyntaxFactory.MissingToken";
+                mName = "SyntaxFactory.BadToken";
+                 head = head ?? GetEmptyTrivia( "LeadingTrivia" );
+                 tail = tail ?? GetEmptyTrivia( "TrailingTrivia" );
             }
-
-            if (value.CSharpKind() == SyntaxKind.BadToken)
-            {
-                methodName = "SyntaxFactory.BadToken";
-                leading = leading ?? GetEmptyTrivia("LeadingTrivia");
-                trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
-            }
-
             object tokenValue = value.CSharpKind();
-
-            if (value.CSharpKind() == SyntaxKind.BadToken)
-            {
-                tokenValue = escapedTokenValueText;
-            }
-
-            AddIfNotNull(arguments, leading);
-            arguments.Add(tokenValue);
-            AddIfNotNull(arguments, trailing);
+            if ( value.IsKind(SyntaxKind.BadToken) )  {  tokenValue = escapedTokenValueText;  }
+            args.AddIfNotNull( head );
+            args.Add( tokenValue );
+            args.AddIfNotNull( tail );
         }
-
-        return new ApiCall(name, methodName, arguments);
+        return new ApiCall( name, mName, args );
     }
 
-    private static void AddIfNotNull(List<object> arguments, object value)
-    {
-        if (value != null)
-        {
-            arguments.Add(value);
-        }
-    }
+    //private static void AddIfNotNull ( List<object> arguments, object value )
+    //{
+    //    if ( value != null )
+    //    {
+    //        arguments.Add( value );
+    //    }
+    //}
 
-    private object GetLeadingTrivia(SyntaxToken value)
-    {
-        if (value.HasLeadingTrivia)
-        {
-            var quotedLeadingTrivia = QuoteList(value.LeadingTrivia, "LeadingTrivia");
-            if (quotedLeadingTrivia != null)
-            {
-                return quotedLeadingTrivia;
-            }
-        }
+    private object GetLeadingTrivia  ( SyntaxToken value )  { return !value.HasLeadingTrivia  ? null : QuoteList(value.LeadingTrivia,  "LeadingTrivia");  }
+    private object GetTrailingTrivia ( SyntaxToken value )  { return !value.HasTrailingTrivia ? null : QuoteList(value.TrailingTrivia, "TrailingTrivia"); }
+    private object GetEmptyTrivia ( string parentPropertyName )  { return new ApiCall( parentPropertyName, "SyntaxFactory.TriviaList", arguments: null ); }
 
-        return null;
-    }
-
-    private object GetTrailingTrivia(SyntaxToken value)
-    {
-        if (value.HasTrailingTrivia)
-        {
-            var quotedTrailingTrivia = QuoteList(value.TrailingTrivia, "TrailingTrivia");
-            if (quotedTrailingTrivia != null)
-            {
-                return quotedTrailingTrivia;
-            }
-        }
-
-        return null;
-    }
-
-    private object GetEmptyTrivia(string parentPropertyName)
-    {
-        return new ApiCall(parentPropertyName, "SyntaxFactory.TriviaList", arguments: null);
-    }
-
-    private ApiCall QuoteTrivia(SyntaxTrivia syntaxTrivia)
+    private ApiCall QuoteTrivia ( SyntaxTrivia syntaxTrivia )
     {
         string factoryMethodName = "SyntaxFactory.Trivia";
         string text = syntaxTrivia.ToString();
-        if (syntaxTrivia.FullSpan.Length == 0 ||
-            (syntaxTrivia.CSharpKind() == SyntaxKind.WhitespaceTrivia && UseDefaultFormatting))
-        {
-            return null;
-        }
+        if ( syntaxTrivia.FullSpan.Length == 0 || ( syntaxTrivia.IsKind(SyntaxKind.WhitespaceTrivia) && UseDefaultFormatting ) )   return null;
 
         FieldInfo field = null;
-        if (triviaFactoryFields.TryGetValue(syntaxTrivia.ToString(), out field) &&
-            ((SyntaxTrivia)field.GetValue(null)).CSharpKind() == syntaxTrivia.CSharpKind())
+        if ( triviaFactoryFields.TryGetValue( syntaxTrivia.ToString( ), out field ) &&
+            ( (SyntaxTrivia)field.GetValue( null ) ).CSharpKind( ) == syntaxTrivia.CSharpKind( ) )
         {
-            if (UseDefaultFormatting)
-            {
-                return null;
-            }
-
-            return new ApiCall(null, "SyntaxFactory." + field.Name);
+            return UseDefaultFormatting ? null : new ApiCall( null, "SyntaxFactory." + field.Name );
         }
 
-        if (!string.IsNullOrEmpty(text) &&
-            string.IsNullOrWhiteSpace(text) &&
-            syntaxTrivia.CSharpKind() == SyntaxKind.WhitespaceTrivia)
+        if ( !string.IsNullOrEmpty( text )  &&  string.IsNullOrWhiteSpace( text )  &&  syntaxTrivia.IsKind(SyntaxKind.WhitespaceTrivia) )
         {
-            if (UseDefaultFormatting)
-            {
-                return null;
-            }
-
+            if ( UseDefaultFormatting )   return null;        
             factoryMethodName = "SyntaxFactory.Whitespace";
         }
 
-        if (syntaxTrivia.CSharpKind() == SyntaxKind.SingleLineCommentTrivia ||
-            syntaxTrivia.CSharpKind() == SyntaxKind.MultiLineCommentTrivia)
-        {
-            factoryMethodName = "SyntaxFactory.Comment";
-        }
-
-        if (syntaxTrivia.CSharpKind() == SyntaxKind.PreprocessingMessageTrivia)
-        {
-            factoryMethodName = "SyntaxFactory.PreprocessingMessage";
-        }
-
-        if (syntaxTrivia.CSharpKind() == SyntaxKind.DisabledTextTrivia)
-        {
-            factoryMethodName = "SyntaxFactory.DisabledText";
-        }
-
-        if (syntaxTrivia.CSharpKind() == SyntaxKind.DocumentationCommentExteriorTrivia)
-        {
-            factoryMethodName = "SyntaxFactory.DocumentationCommentExterior";
-        }
+        if ( syntaxTrivia.IsTriviaAny( SyntaxKind.SingleLineCommentTrivia ,
+                                       SyntaxKind.MultiLineCommentTrivia) )        { factoryMethodName = "SyntaxFactory.Comment"; }
+        if ( syntaxTrivia.IsKind( SyntaxKind.PreprocessingMessageTrivia ))         { factoryMethodName = "SyntaxFactory.PreprocessingMessage"; }
+        if ( syntaxTrivia.IsKind( SyntaxKind.DisabledTextTrivia ))                 { factoryMethodName = "SyntaxFactory.DisabledText"; }
+        if ( syntaxTrivia.IsKind( SyntaxKind.DocumentationCommentExteriorTrivia )) { factoryMethodName = "SyntaxFactory.DocumentationCommentExterior"; }
 
         object argument = "@\"" + Escape(syntaxTrivia.ToString()) + "\"";
 
-        if (syntaxTrivia.HasStructure)
-        {
-            argument = QuoteNode(syntaxTrivia.GetStructure(), "Structure");
-        }
+        if ( syntaxTrivia.HasStructure )  { argument = QuoteNode( syntaxTrivia.GetStructure( ), "Structure" );  }
 
-        return new ApiCall(null, factoryMethodName, CreateArgumentList(argument));
+        return new ApiCall( null, factoryMethodName, ArgList.Create( argument ) );
     }
 
-    private void AddFactoryMethodArguments(
+    private void AddFactoryMethodArguments (
         MethodInfo factory,
         MethodCall factoryMethodCall,
-        List<ApiCall> quotedValues)
+        List<ApiCall> quotedValues )
     {
-        foreach (var factoryMethodParameter in factory.GetParameters())
+        foreach ( var FMP in factory.GetParameters( ) )
         {
-            var parameterName = factoryMethodParameter.Name;
-            var parameterType = factoryMethodParameter.ParameterType;
+            var pName = FMP.Name;
+            var pType = FMP.ParameterType;
 
-            ApiCall quotedCodeBlock = FindValue(parameterName, quotedValues);
+            ApiCall quotedCodeBlock = FindValue(pName, quotedValues);
 
             // special case to prefer Syntax.IdentifierName("C") to 
             // Syntax.IdentifierName(Syntax.Identifier("C"))
-            if (parameterName == "name" && parameterType == typeof(string))
+            if ( pName == "name" && pType == typeof(string) )
             {
-                quotedCodeBlock = quotedValues.First(a => a.Name == "Identifier");
-                var methodCall = quotedCodeBlock.FactoryMethodCall as MethodCall;
-                if (methodCall != null && methodCall.Name == "SyntaxFactory.Identifier")
+                quotedCodeBlock = quotedValues.First( a => a.Name == "Identifier" );
+                var methodCall  = quotedCodeBlock.FactoryMethodCall as MethodCall;
+                if ( methodCall != null && methodCall.Name == "SyntaxFactory.Identifier" )
                 {
-                    if (methodCall.Arguments.Count == 1)
-                    {
-                        factoryMethodCall.AddArgument(methodCall.Arguments[0]);
-                    }
-                    else
-                    {
-                        factoryMethodCall.AddArgument(quotedCodeBlock);
-                    }
-
-                    quotedValues.Remove(quotedCodeBlock);
+                    if ( methodCall.Arguments.Count == 1 )  {  factoryMethodCall.Arguments.Add( methodCall.Arguments[0] ); }
+                    else                                    {  factoryMethodCall.Arguments.Add( quotedCodeBlock );            }
+                    quotedValues.Remove( quotedCodeBlock );
                     continue;
                 }
             }
-
             // special case to prefer Syntax.ClassDeclarationSyntax(string) instead of 
             // Syntax.ClassDeclarationSyntax(SyntaxToken)
-            if (parameterName == "identifier" && parameterType == typeof(string))
+            if ( pName == "identifier" && pType == typeof(string) )
             {
                 var methodCall = quotedCodeBlock.FactoryMethodCall as MethodCall;
-                if (methodCall != null &&
-                    methodCall.Name == "SyntaxFactory.Identifier" &&
-                    methodCall.Arguments.Count == 1)
+                if ( methodCall != null && methodCall.Name == "SyntaxFactory.Identifier" && methodCall.Arguments.Count == 1 )
                 {
-                    factoryMethodCall.AddArgument(methodCall.Arguments[0]);
-                    quotedValues.Remove(quotedCodeBlock);
+                    factoryMethodCall.Arguments.Add( methodCall.Arguments [ 0 ] );
+                    quotedValues.Remove( quotedCodeBlock );
                     continue;
                 }
             }
 
-            if (quotedCodeBlock != null)
-            {
-                factoryMethodCall.AddArgument(quotedCodeBlock);
-                quotedValues.Remove(quotedCodeBlock);
-            }
-            else if (!factoryMethodParameter.IsOptional)
+            if ( quotedCodeBlock != null )  {  factoryMethodCall.Arguments.Add( quotedCodeBlock );  quotedValues.Remove( quotedCodeBlock );  }
+            else if ( !FMP.IsOptional )
             {
                 throw new InvalidOperationException(
                     string.Format(
                         "Couldn't find value for parameter '{0}' of method '{1}'. Go to QuotePropertyValues and add your node type to the exception list.",
-                        parameterName,
-                        factory));
+                        pName,
+                        factory ) );
             }
         }
     }
 
-    /// <summary>
-    /// Helper to quickly create a list from one or several items
-    /// </summary>
-    private static List<object> CreateArgumentList(params object[] args)
-    {
-        return new List<object>(args);
-    }
+    ///// <summary>
+    ///// Helper to quickly create a list from one or several items
+    ///// </summary>
+    //private static List<object> CreateArgumentList ( params object [ ] args )
+    //{
+    //    return new List<object>( args );
+    //}
 
     /// <summary>
     /// Escapes strings to be included within "" using C# escaping rules
     /// </summary>
-    private string Escape(string text, bool escapeVerbatim = true)
+    private string Escape ( string text, bool escapeVerbatim = true )
     {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < text.Length; i++)
+        for ( int i = 0; i < text.Length; i++ )
         {
             string toAppend = text[i].ToString();
-            if (text[i] == '"')
-            {
-                if (escapeVerbatim)
-                {
-                    toAppend = "\"\"";
-                }
-                else
-                {
-                    toAppend = "\\\"";
-                }
-            }
-            else if (text[i] == '\\' && !escapeVerbatim)
-            {
-                toAppend = "\\\\";
-            }
-
-            sb.Append(toAppend);
+            if ( text [ i ] == '"' )                           { toAppend = escapeVerbatim ? "\"\"" : toAppend = "\\\"";  }
+            else if ( text [ i ] == '\\' && !escapeVerbatim )  { toAppend = "\\\\";  }
+            sb.Append( toAppend );
         }
-
-        return sb.ToString();
+        return sb.ToString( );
     }
 
     /// <summary>
     /// Finds a value in a list using case-insensitive search
     /// </summary>
-    private ApiCall FindValue(string parameterName, IEnumerable<ApiCall> values)
+    private ApiCall FindValue ( string parameterName, IEnumerable<ApiCall> values )
     {
-        return values.FirstOrDefault(
-            v => parameterName.Equals(v.Name, StringComparison.OrdinalIgnoreCase));
+        return values.FirstOrDefault( v => parameterName.Equals( v.Name, StringComparison.OrdinalIgnoreCase ) );
     }
 
     /// <summary>
@@ -653,42 +414,29 @@ public class Quoter
     /// Gets the five fields on Syntax that return ready-made trivia: CarriageReturn,
     /// CarriageReturnLineFeed, LineFeed, Space and Tab.
     /// </summary>
-    private static Dictionary<string, FieldInfo> GetTriviaFactoryFields()
+    private static Dictionary<string, FieldInfo> GetTriviaFactoryFields ( )
     {
-        var result = typeof(SyntaxFactory)
-            .GetFields(BindingFlags.Public | BindingFlags.Static)
-            .Where(fieldInfo => fieldInfo.FieldType == typeof(SyntaxTrivia))
-            .Where(fieldInfo => !fieldInfo.Name.Contains("Elastic"))
-            .ToDictionary(fieldInfo => ((SyntaxTrivia)fieldInfo.GetValue(null)).ToString());
-
-        return result;
+       return typeof(SyntaxFactory).GetFields(BindingFlags.Public | BindingFlags.Static)
+                                   .Where(fieldInfo => fieldInfo.FieldType == typeof(SyntaxTrivia))
+                                   .Where(fieldInfo => !fieldInfo.Name.Contains("Elastic"))
+                                   .ToDictionary(fieldInfo => ((SyntaxTrivia)fieldInfo.GetValue(null)).ToString());
     }
 
     /// <summary>
     /// Returns static methods on Roslyn.Compilers.CSharp.Syntax that return types derived from
     /// SyntaxNode and bucketizes them by overloads.
     /// </summary>
-    private static Dictionary<string, List<MethodInfo>> GetFactoryMethods()
+    private static Dictionary<string, List<MethodInfo>> GetFactoryMethods ( )
     {
-        var result = new Dictionary<string, List<MethodInfo>>();
-
-        var staticMethods = typeof(SyntaxFactory).GetMethods(
-            BindingFlags.Public | BindingFlags.Static);
-
-        foreach (var method in staticMethods)
+        var result        = new Dictionary<string, List<MethodInfo>>();
+        var staticMethods = typeof(SyntaxFactory).GetMethods( BindingFlags.Public | BindingFlags.Static);
+        foreach ( var method in staticMethods )
         {
             var returnTypeName = method.ReturnType.Name;
-
             List<MethodInfo> bucket = null;
-            if (!result.TryGetValue(returnTypeName, out bucket))
-            {
-                bucket = new List<MethodInfo>();
-                result.Add(returnTypeName, bucket);
-            }
-
-            bucket.Add(method);
+            if ( !result.TryGetValue( returnTypeName, out bucket ) )  { bucket = new List<MethodInfo>();  result.Add( returnTypeName, bucket ); }
+            bucket.Add( method );
         }
-
         return result;
     }
 
@@ -697,80 +445,49 @@ public class Quoter
     /// class and pick an overload that creates a node of the same type as the input <paramref
     /// name="node"/>
     /// </summary>
-    private MethodInfo PickFactoryMethodToCreateNode(SyntaxNode node)
+    private MethodInfo PickFactoryMethodToCreateNode ( SyntaxNode node )
     {
-        string name = node.GetType().Name;
-
+        string  name = node.GetType().Name;
         List<MethodInfo> candidates = null;
-        if (!factoryMethods.TryGetValue(name, out candidates))
-        {
-            throw new NotSupportedException(name + " is not supported");
-        }
-
+        if ( !factoryMethods.TryGetValue( name, out candidates ) )  { throw new NotSupportedException( name + " is not supported" ); }
         int minParameterCount = candidates.Min(m => m.GetParameters().Length);
-
         // HACK: for LiteralExpression pick the overload with two parameters - the overload with one
         // parameter only allows true/false/null literals
-        if (node is LiteralExpressionSyntax)
+        if ( node is LiteralExpressionSyntax )
         {
-            SyntaxKind kind = ((LiteralExpressionSyntax)node).CSharpKind();
-            if (kind != SyntaxKind.TrueLiteralExpression &&
-                kind != SyntaxKind.FalseLiteralExpression &&
-                kind != SyntaxKind.NullLiteralExpression)
-            {
-                minParameterCount = 2;
-            }
+            var les = ((LiteralExpressionSyntax)node);
+            var res = les.IsKindNoneOf( SyntaxKind.TrueLiteralExpression,
+                                        SyntaxKind.FalseLiteralExpression,
+                                        SyntaxKind.NullLiteralExpression );
+            if (res) {  minParameterCount = 2;  }
         }
-
         MethodInfo factory = null;
-
-        if ((node is BaseTypeDeclarationSyntax ||
-             node is IdentifierNameSyntax))
+        if ( ( node is BaseTypeDeclarationSyntax || node is IdentifierNameSyntax ) )
         {
             Type desiredParameterType = typeof(string);
-            factory = candidates.FirstOrDefault(m => m.GetParameters()[0].ParameterType == desiredParameterType);
-            if (factory != null)
-            {
-                return factory;
-            }
+            factory = candidates.FirstOrDefault( m => m.GetParameters( ) [ 0 ].ParameterType == desiredParameterType );
+            if ( factory != null )  return factory;
         }
-
-        factory = candidates.First(m => m.GetParameters().Length == minParameterCount);
-        return factory;
+        return candidates.First( m => m.GetParameters( ).Length == minParameterCount );
     }
 
     /// <summary>
     /// Adds information about subsequent modifying fluent interface style calls on an object (like
     /// foo.With(...).With(...))
     /// </summary>
-    private void AddModifyingCalls(object treeElement, ApiCall apiCall, List<ApiCall> values)
+    private void AddModifyingCalls ( object treeElement, ApiCall apiCall, List<ApiCall> values )
     {
         var methods = treeElement.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance);
-
-        foreach (var value in values)
+        foreach ( var value in values )
         {
-            var properCase = ProperCase(value.Name);
-            var methodName = "With" + properCase;
-            if (methods.Any(m => m.Name == methodName))
-            {
-                methodName = "." + methodName;
-            }
-            else
-            {
-                throw new NotSupportedException();
-            }
-
-            var methodCall = new MethodCall
-            {
-                Name = methodName,
-                Arguments = CreateArgumentList(value)
-            };
-
-            AddModifyingCall(apiCall, methodCall);
+            var methodName = "With" + ProperCase(value.Name);
+            if ( !methods.Any( m => m.Name == methodName ) ) throw new NotSupportedException( );
+            methodName = "." + methodName;
+            AddModifyingCall( apiCall, new MethodCall( methodName, ArgList.Create(value)));
         }
     }
 
-    private void AddModifyingCall(ApiCall apiCall, MethodCall methodCall)
+    private void AddModifyingCall ( ApiCall apiCall, MethodCall methodCall )
     {
         // TODO: this needs scripting
         ////if (RemoveRedundantModifyingCalls)
@@ -783,163 +500,70 @@ public class Quoter
         ////        apiCall.Remove(methodCall);
         ////    }
         ////}
-
-        apiCall.Add(methodCall);
-        return;
+        apiCall.Add( methodCall );
     }
 
     /// <summary>
     /// Flattens a tree of ApiCalls into a single string.
     /// </summary>
-    private string Print(ApiCall root)
+    private string Print ( ApiCall root )  { return  Print( root, new StringBuilder(), 0, OpenParenthesisOnNewLine, ClosingParenthesisOnNewLine ).ToString(); }
+
+    private static string PrintWithDefaultFormatting ( ApiCall root )
     {
-        var sb = new StringBuilder();
-        Print(root, sb, 0, OpenParenthesisOnNewLine, ClosingParenthesisOnNewLine);
-        var generatedCode = sb.ToString();
-        return generatedCode;
+       return  Print( root, new StringBuilder(), 0, openParenthesisOnNewLine: false, closingParenthesisOnNewLine: false ).ToString();
     }
 
-    private static string PrintWithDefaultFormatting(ApiCall root)
+    private static StringBuilder Print ( ApiCall codeBlock, StringBuilder sb, int depth = 0,  bool openParenthesisOnNewLine = false,  bool closingParenthesisOnNewLine = false )
     {
-        var sb = new StringBuilder();
-        Print(
-            root,
-            sb,
-            0,
-            openParenthesisOnNewLine: false,
-            closingParenthesisOnNewLine: false);
-        var generatedCode = sb.ToString();
-        return generatedCode;
-    }
-
-    private static void Print(
-        ApiCall codeBlock,
-        StringBuilder sb,
-        int depth = 0,
-        bool openParenthesisOnNewLine = false,
-        bool closingParenthesisOnNewLine = false)
-    {
-        Print(
-            codeBlock.FactoryMethodCall,
-            sb,
-            depth,
-            useCurliesInsteadOfParentheses: codeBlock.UseCurliesInsteadOfParentheses,
-            openParenthesisOnNewLine: openParenthesisOnNewLine,
-            closingParenthesisOnNewLine: closingParenthesisOnNewLine);
-        if (codeBlock.InstanceMethodCalls != null)
+        Print( codeBlock.FactoryMethodCall, sb, depth, useCurliesInsteadOfParentheses: codeBlock.UseCurliesInsteadOfParentheses,
+                                                             openParenthesisOnNewLine: openParenthesisOnNewLine,
+                                                          closingParenthesisOnNewLine: closingParenthesisOnNewLine );
+        if ( codeBlock.InstanceMethodCalls == null ) return sb;
+        foreach ( var call in codeBlock.InstanceMethodCalls )
         {
-            foreach (var call in codeBlock.InstanceMethodCalls)
-            {
-                PrintNewLine(sb);
-                Print(
-                    call,
-                    sb,
-                    depth,
-                    useCurliesInsteadOfParentheses: codeBlock.UseCurliesInsteadOfParentheses,
-                    openParenthesisOnNewLine: openParenthesisOnNewLine,
-                    closingParenthesisOnNewLine: closingParenthesisOnNewLine);
-            }
+          Print( call, PrintNewLine( sb ), depth, useCurliesInsteadOfParentheses: codeBlock.UseCurliesInsteadOfParentheses,
+                                                        openParenthesisOnNewLine: openParenthesisOnNewLine,
+                                                     closingParenthesisOnNewLine: closingParenthesisOnNewLine );
         }
+        return sb;
     }
 
-    private static void Print(
-        MemberCall call,
-        StringBuilder sb,
-        int depth,
-        bool openParenthesisOnNewLine = false,
-        bool closingParenthesisOnNewLine = false,
-        bool useCurliesInsteadOfParentheses = false)
+    private static StringBuilder Print ( MemberCall call, StringBuilder sb, int depth, bool       openParenthesisOnNewLine = false,
+                                                                                       bool    closingParenthesisOnNewLine = false,
+                                                                                       bool useCurliesInsteadOfParentheses = false )
     {
-        var openParen = useCurliesInsteadOfParentheses ? "{" : "(";
+        var openParen  = useCurliesInsteadOfParentheses ? "{" : "(";
         var closeParen = useCurliesInsteadOfParentheses ? "}" : ")";
-        Print(call.Name, sb, depth);
-
+        Print( call.Name, sb, depth );
         MethodCall methodCall = call as MethodCall;
-        if (methodCall != null)
+        if ( methodCall != null )
         {
-            if (methodCall.Arguments == null || !methodCall.Arguments.Any())
-            {
-                Print(openParen + closeParen, sb, 0);
-                return;
-            }
-
-            if (openParenthesisOnNewLine)
-            {
-                PrintNewLine(sb);
-                Print(openParen, sb, depth);
-            }
-            else
-            {
-                Print(openParen, sb, 0);
-            }
-
-            PrintNewLine(sb);
-
+            if ( methodCall.Arguments == null || !methodCall.Arguments.Any( ) )   {  Print( openParen + closeParen, sb, 0 );  return sb;  }
+            if ( openParenthesisOnNewLine )      {  PrintNewLine( sb );  Print( openParen, sb, depth );  }
+            else                                 {  Print( openParen, sb, 0 );                           }
+            PrintNewLine( sb );
             bool needComma = false;
-            foreach (var block in methodCall.Arguments)
+            foreach ( var block in methodCall.Arguments )
             {
-                if (needComma)
-                {
-                    Print(",", sb, 0);
-                    PrintNewLine(sb);
-                }
-
-                if (block is string)
-                {
-                    Print(
-                        (string)block,
-                        sb,
-                        depth + 1);
-                }
-                else if (block is SyntaxKind)
-                {
-                    Print("SyntaxKind." + ((SyntaxKind)block).ToString(), sb, depth + 1);
-                }
-                else if (block is ApiCall)
-                {
-                    Print(
-                        block as ApiCall,
-                        sb,
-                        depth + 1,
-                        openParenthesisOnNewLine: openParenthesisOnNewLine,
-                        closingParenthesisOnNewLine: closingParenthesisOnNewLine);
-                }
-
+                if ( needComma )                 {  Print( ",", sb, 0 );  PrintNewLine( sb );  }
+                if ( block is string )           {  Print( (string)block, sb, depth + 1 );     }
+                else if ( block is SyntaxKind )  {  Print( "SyntaxKind." + ( (SyntaxKind)block ).ToString( ), sb, depth + 1 );  }
+                else if ( block is ApiCall )     {  Print(  block as ApiCall, sb, depth + 1,
+                                                             openParenthesisOnNewLine: openParenthesisOnNewLine,
+                                                          closingParenthesisOnNewLine: closingParenthesisOnNewLine );
+                                                 }
                 needComma = true;
             }
-
-            if (closingParenthesisOnNewLine)
-            {
-                PrintNewLine(sb);
-                Print(closeParen, sb, depth);
-            }
-            else
-            {
-                Print(closeParen, sb, 0);
-            }
+            if ( closingParenthesisOnNewLine )   {  PrintNewLine( sb ); Print( closeParen, sb, depth ); }
+            else                                 {  Print( closeParen, sb, 0 );                         }
         }
+        return sb;
     }
 
-    private static void PrintNewLine(StringBuilder sb)
-    {
-        sb.AppendLine();
-    }
-
-    private static void Print(string line, StringBuilder sb, int indent)
-    {
-        PrintIndent(sb, indent);
-        sb.Append(line);
-    }
-
-    private static void PrintIndent(StringBuilder sb, int indent)
-    {
-        sb.Append(new string(' ', indent * 4));
-    }
-
-    private static string ProperCase(string str)
-    {
-        return char.ToUpperInvariant(str[0]) + str.Substring(1);
-    }
+    private static StringBuilder PrintNewLine ( StringBuilder sb )                             { return sb.AppendLine(); }
+    private static StringBuilder Print        ( string line, StringBuilder   sb, int indent )  { return  PrintIndent( sb, indent ).Append( line ); }
+    private static StringBuilder PrintIndent  ( StringBuilder sb, int indent )                 { return sb.Append( new string( ' ', indent * 4 ) ); }
+    private static string        ProperCase   ( string str )                                   { return char.ToUpperInvariant( str [ 0 ] ) + str.Substring( 1 );  }
 
     /// <summary>
     /// Enumerates names of properties on SyntaxNode, SyntaxToken and SyntaxTrivia classes that do
@@ -947,33 +571,13 @@ public class Quoter
     /// </summary>
     private static readonly string[] nonStructuralProperties =
     {
-        "AllowsAnyExpression",
-        "Arity",
-        "ContainsAnnotations",
-        "ContainsDiagnostics",
-        "ContainsDirectives",
-        "ContainsSkippedText",
-        "DirectiveNameToken",
-        "FullSpan",
-        "HasLeadingTrivia",
-        "HasTrailingTrivia",
-        "HasStructuredTrivia",
-        "HasStructure",
-        "IsConst",
-        "IsDirective",
-        "IsElastic",
-        "IsFixed",
-        "IsMissing",
-        "IsStructuredTrivia",
-        "IsUnboundGenericName",
-        "IsVar",
-        "Kind",
-        "Language",
-        "Parent",
-        "ParentTrivia",
-        "PlainName",
-        "Span",
-        "SyntaxTree",
+        "AllowsAnyExpression",               "Arity",  "ContainsAnnotations", "ContainsDiagnostics",
+         "ContainsDirectives", "ContainsSkippedText",   "DirectiveNameToken",            "FullSpan",
+           "HasLeadingTrivia",   "HasTrailingTrivia",  "HasStructuredTrivia",        "HasStructure",
+                    "IsConst",         "IsDirective",            "IsElastic",             "IsFixed",
+                  "IsMissing",  "IsStructuredTrivia", "IsUnboundGenericName",               "IsVar",
+                       "Kind",            "Language",               "Parent",        "ParentTrivia",
+                  "PlainName",                "Span",           "SyntaxTree", 
     };
 
     /// <summary>
@@ -987,65 +591,27 @@ public class Quoter
     /// </example>
     private class ApiCall
     {
-        public string Name { get; private set; }
-        public MemberCall FactoryMethodCall { get; private set; }
-        public List<MethodCall> InstanceMethodCalls { get; private set; }
-        public bool UseCurliesInsteadOfParentheses { get; private set; }
+        public string                          Name  { get; private set; }
+        public MemberCall         FactoryMethodCall  { get; private set; }
+        public List<MethodCall> InstanceMethodCalls  { get; private set; }
+        public bool  UseCurliesInsteadOfParentheses  { get; private set; }
 
-        public ApiCall()
-        {
-        }
+        public ApiCall ( string parentPropertyName ) { Name = parentPropertyName; }
 
-        public ApiCall(string parentPropertyName, string factoryMethodName)
-        {
-            Name = parentPropertyName;
-            FactoryMethodCall = new MemberCall
-            {
-                Name = factoryMethodName
-            };
-        }
+        public ApiCall ( string parentPropertyName, string factoryMethodName )  : this(parentPropertyName)
+          { FactoryMethodCall = new MemberCall(factoryMethodName); }
 
-        public ApiCall(string parentPropertyName, string factoryMethodName, List<object> arguments, bool useCurliesInsteadOfParentheses = false)
-        {
-            UseCurliesInsteadOfParentheses = useCurliesInsteadOfParentheses;
-            Name = parentPropertyName;
-            FactoryMethodCall = new MethodCall
-            {
-                Name = factoryMethodName,
-                Arguments = arguments
-            };
-        }
+        public ApiCall ( string parentPropertyName,
+                         string  factoryMethodName,
+                        ArgList          arguments,
+                           bool useCurliesInsteadOfParentheses = false )  : this(parentPropertyName, new MethodCall( factoryMethodName, arguments ))
+          {  UseCurliesInsteadOfParentheses = useCurliesInsteadOfParentheses; }
 
-        public ApiCall(string name, MethodCall factoryMethodCall)
-        {
-            Name = name;
-            FactoryMethodCall = factoryMethodCall;
-        }
+        public ApiCall ( string name, MethodCall factoryMethodCall ) : this(name)  {  FactoryMethodCall = factoryMethodCall; }
 
-        public void Add(MethodCall methodCall)
-        {
-            if (InstanceMethodCalls == null)
-            {
-                InstanceMethodCalls = new List<MethodCall>();
-            }
-
-            InstanceMethodCalls.Add(methodCall);
-        }
-
-        public void Remove(MethodCall methodCall)
-        {
-            if (InstanceMethodCalls == null)
-            {
-                return;
-            }
-
-            InstanceMethodCalls.Remove(methodCall);
-        }
-
-        public override string ToString()
-        {
-            return Quoter.PrintWithDefaultFormatting(this);
-        }
+        public void Add    ( MethodCall methodCall )  { ( InstanceMethodCalls ?? new List<MethodCall>() ).Add   ( methodCall ); }
+        public void Remove ( MethodCall methodCall )  { ( InstanceMethodCalls ?? new List<MethodCall>() ).Remove( methodCall ); }
+        public override string ToString () { return Quoter.PrintWithDefaultFormatting( this ) }
     }
 
     /// <summary>
@@ -1053,14 +619,9 @@ public class Quoter
     /// </summary>
     private class MemberCall
     {
-        public string Name { get; set; }
-
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-            Quoter.Print(this, sb, 0);
-            return sb.ToString();
-        }
+       public string Name { get; private set; }
+       public MemberCall ( string factoryMethodName )  { Name = factoryMethodName; }
+       public override string ToString ()  {  return Print( this, new StringBuilder(), 0 ).ToString();  }
     }
 
     /// <summary>
@@ -1068,16 +629,38 @@ public class Quoter
     /// </summary>
     private class MethodCall : MemberCall
     {
-        public List<object> Arguments { get; set; }
+        public ArgList Arguments { get; private set; } = ArgList.Create();
 
-        public void AddArgument(object value)
-        {
-            if (Arguments == null)
-            {
-                Arguments = new List<object>();
-            }
-
-            Arguments.Add(value);
-        }
+        public MethodCall ( string methodName ) : base( methodName ) { }
+        public MethodCall ( string methodName, ArgList argList ) : this(methodName)  { Arguments  = argList; }
     }
+}
+
+public static class Exts
+{
+    public static bool IsKind       ( this SyntaxNode   CSNode, SyntaxKind CSKind ) { return CSNode.CSharpKind( ) == CSKind; }
+    public static bool IsKindAny    ( this SyntaxNode   CSNode, params SyntaxKind [ ] CSKinds ) { return CSKinds.Any( csk => CSNode.CSharpKind() == csk ); }
+    public static bool IsKindNoneOf ( this SyntaxNode   CSNode, params SyntaxKind [ ] CSKinds ) { return CSKinds.All( csk => CSNode.CSharpKind() != csk ); }
+    public static bool IsTriviaAny  ( this SyntaxTrivia CSNode, params SyntaxKind [ ] CSKinds ) { return CSKinds.Any( csk => CSNode.IsKind( csk) ); }
+    public static bool IsKindAny    ( this SyntaxToken  CSNode, params SyntaxKind [ ] CSKinds ) { return CSKinds.Any( csk => CSNode.CSharpKind() == csk ); }
+    public static bool IsKindNoneOf ( this SyntaxToken  CSNode, params SyntaxKind [ ] CSKinds ) { return CSKinds.All( csk => CSNode.CSharpKind() != csk ); }
+
+}
+
+public class ArgList : IEnumerable<object>
+{
+    private List<object> Args  = new List<object>( );
+    public  int         Count { get { return Args.Count; } }
+    public object this [ int index ]  {  get { return Args [ index ];}   }
+
+    private ArgList ( params object [ ] Arguments ) { Args = new List<object>( Arguments ); }
+
+    public static ArgList Create(params object[] Arguments ) {  return new ArgList( Arguments ); }
+
+    public void          Add (params object[] Arguments) { Args.AddRange( Arguments ); }
+    public void AddIfNotNull (       object      value ) { if ( value != null ) { Args.Add( value ); }  }
+
+    IEnumerator<object> IEnumerable<object>.GetEnumerator ( ) { return this.Args.GetEnumerator(); }
+    IEnumerator                 IEnumerable.GetEnumerator ( ) { return this.Args.GetEnumerator(); }
+
 }

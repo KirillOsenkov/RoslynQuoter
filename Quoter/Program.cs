@@ -9,12 +9,7 @@ namespace QuoterHost
         {
             var sourceText = "class C{}";
             var sourceNode = CSharpSyntaxTree.ParseText(sourceText).GetRoot() as CSharpSyntaxNode;
-            var quoter = new Quoter
-            {
-                OpenParenthesisOnNewLine = false,
-                ClosingParenthesisOnNewLine = false,
-                UseDefaultFormatting = true
-            };
+            var quoter = new Quoter( );
 
             var generatedCode = quoter.Quote(sourceNode);
 
