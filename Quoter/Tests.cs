@@ -9,9 +9,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 public class Tests
 {
     [TestMethod]
-    public void TestSimpleClass()
+    public void TestSimpleClass ( )
     {
-        Test("class C { }", @"SyntaxFactory.CompilationUnit()
+        Test( "class C { }", @"SyntaxFactory.CompilationUnit()
 .WithMembers(
     SyntaxFactory.SingletonList<MemberDeclarationSyntax>(
         SyntaxFactory.ClassDeclaration(
@@ -28,13 +28,13 @@ public class Tests
 .WithEndOfFileToken(
     SyntaxFactory.Token(
         SyntaxKind.EndOfFileToken))
-.NormalizeWhitespace()");
+.NormalizeWhitespace()" );
     }
 
     [TestMethod]
-    public void TestMissingToken()
+    public void TestMissingToken ( )
     {
-        Test("class", @"SyntaxFactory.CompilationUnit()
+        Test( "class", @"SyntaxFactory.CompilationUnit()
 .WithMembers(
     SyntaxFactory.SingletonList<MemberDeclarationSyntax>(
         SyntaxFactory.ClassDeclaration(
@@ -52,19 +52,19 @@ public class Tests
 .WithEndOfFileToken(
     SyntaxFactory.Token(
         SyntaxKind.EndOfFileToken))
-.NormalizeWhitespace()");
+.NormalizeWhitespace()" );
     }
 
     [TestMethod]
-    public void TestGlobal()
+    public void TestGlobal ( )
     {
-        Test(@"class C { void M() { global::System.String s; } }");
+        Test( @"class C { void M() { global::System.String s; } }" );
     }
 
     [TestMethod]
-    public void TestHelloWorld()
+    public void TestHelloWorld ( )
     {
-        Test(@"using System;
+        Test( @"using System;
 
 namespace N
 {
@@ -204,19 +204,19 @@ namespace N
 .WithEndOfFileToken(
     SyntaxFactory.Token(
         SyntaxKind.EndOfFileToken))
-.NormalizeWhitespace()");
+.NormalizeWhitespace()" );
     }
 
     [TestMethod]
-    public void Roundtrip1()
+    public void Roundtrip1 ( )
     {
-        Test("class C { string s = \"\\\"\"; }");
+        Test( "class C { string s = \"\\\"\"; }" );
     }
 
     [TestMethod]
-    public void Roundtrip2()
+    public void Roundtrip2 ( )
     {
-        Test(@"using System;
+        Test( @"using System;
 
 class Program
 {
@@ -224,161 +224,161 @@ class Program
     {
         
     }
-}");
+}" );
     }
 
     [TestMethod]
-    public void Roundtrip3()
+    public void Roundtrip3 ( )
     {
-        Test("class C { string s = \"\\\"\"; }");
+        Test( "class C { string s = \"\\\"\"; }" );
     }
 
     [TestMethod]
-    public void Roundtrip4()
+    public void Roundtrip4 ( )
     {
-        Test("class C { string s = @\"\"\"\"; }");
+        Test( "class C { string s = @\"\"\"\"; }" );
     }
 
     [TestMethod]
-    public void Roundtrip5()
+    public void Roundtrip5 ( )
     {
-        Test(@"class C { void M() { M(1, 2); } }");
+        Test( @"class C { void M() { M(1, 2); } }" );
     }
 
     [TestMethod]
-    public void Roundtrip6()
+    public void Roundtrip6 ( )
     {
-        Test(@"class C { bool b = true; }");
+        Test( @"class C { bool b = true; }" );
     }
 
     [TestMethod]
-    public void Roundtrip7()
+    public void Roundtrip7 ( )
     {
-        Test(@"#error Foo");
+        Test( @"#error Foo" );
     }
 
     [TestMethod]
-    public void Roundtrip8()
+    public void Roundtrip8 ( )
     {
-        Test(@"#if false
+        Test( @"#if false
 int i
-#endif");
+#endif" );
     }
 
     [TestMethod]
-    public void Roundtrip9()
+    public void Roundtrip9 ( )
     {
-        Test(@"\\\");
+        Test( @"\\\" );
     }
 
     [TestMethod]
-    public void Roundtrip10()
+    public void Roundtrip10 ( )
     {
-        Test(@"/// baz <summary>foo</summary> bar");
+        Test( @"/// baz <summary>foo</summary> bar" );
     }
 
     [TestMethod]
-    public void Roundtrip11()
+    public void Roundtrip11 ( )
     {
-        Test(@"class /*///*/C");
+        Test( @"class /*///*/C" );
     }
 
     [TestMethod]
-    public void Roundtrip12()
+    public void Roundtrip12 ( )
     {
-        Test("#pragma checksum \"file.txt\" \"{00000000-0000-0000-0000-000000000000}\" \"2453\"");
+        Test( "#pragma checksum \"file.txt\" \"{00000000-0000-0000-0000-000000000000}\" \"2453\"" );
     }
 
     [TestMethod]
-    public void Roundtrip13()
+    public void Roundtrip13 ( )
     {
-        Test(@"class \\u0066 { }");
+        Test( @"class \\u0066 { }" );
     }
 
     [TestMethod]
-    public void Roundtrip14()
+    public void Roundtrip14 ( )
     {
-        Test(@"class C { }");
+        Test( @"class C { }" );
     }
 
     [TestMethod]
-    public void Roundtrip15()
+    public void Roundtrip15 ( )
     {
-        Test(@"class C { void M() { ((Action)(async () =>
+        Test( @"class C { void M() { ((Action)(async () =>
                 {
-                }))(); } }");
+                }))(); } }" );
     }
 
     [TestMethod]
-    public void Roundtrip16()
+    public void Roundtrip16 ( )
     {
-        Test(@"class C { void M() { a ? b : c; } }");
+        Test( @"class C { void M() { a ? b : c; } }" );
     }
 
-    private static string GetPath(string relativePath)
+    private static string GetPath ( string relativePath )
     {
-        if (Path.IsPathRooted(relativePath))
+        if ( Path.IsPathRooted( relativePath ) )
         {
-            return Path.GetFullPath(relativePath);
+            return Path.GetFullPath( relativePath );
         }
 
         return Path.GetFullPath(
             Path.Combine(
                 Path.GetDirectoryName(
-                    Assembly.GetExecutingAssembly().Location),
-                relativePath));
+                    Assembly.GetExecutingAssembly( ).Location ),
+                relativePath ) );
     }
 
-    private void RoundtripFile(string filePath)
+    private void RoundtripFile ( string filePath )
     {
         Test(
-            File.ReadAllText(GetPath(filePath)),
+            File.ReadAllText( GetPath( filePath ) ),
             useDefaultFormatting: false,
-            removeRedundantCalls: false);
+            removeRedundantCalls: false );
     }
 
     [TestMethod]
-    public void Roundtrip20()
+    public void Roundtrip20 ( )
     {
-        Test("#line 1 \"a\\b\"");
+        Test( "#line 1 \"a\\b\"" );
     }
 
     [TestMethod]
-    public void Roundtrip21()
+    public void Roundtrip21 ( )
     {
-        Test("#line 1 \"a\\\b\"");
+        Test( "#line 1 \"a\\\b\"" );
     }
 
     [TestMethod]
-    public void Roundtrip22()
+    public void Roundtrip22 ( )
     {
-        Test("#pragma checksum \"..\\..\"");
+        Test( "#pragma checksum \"..\\..\"" );
     }
 
     // [TestMethod]
     [WorkItem(15194)]
-    public void Roundtrip23()
+    public void Roundtrip23 ( )
     {
-        Test("class C { void P { a } }");
+        Test( "class C { void P { a } }" );
     }
 
     [TestMethod]
-    public void Roundtrip24()
+    public void Roundtrip24 ( )
     {
-        Test(@"///
-class C { }");
+        Test( @"///
+class C { }" );
     }
 
     [TestMethod]
-    public void Roundtrip25()
+    public void Roundtrip25 ( )
     {
-        Test("class C { void M(__arglist) { M(__arglist); } }");
+        Test( "class C { void M(__arglist) { M(__arglist); } }" );
     }
 
     [TestMethod]
-    public void Roundtrip26()
+    public void Roundtrip26 ( )
     {
-        Test(@"
+        Test( @"
 namespace @N
 {
    public class @A
@@ -386,49 +386,42 @@ namespace @N
        public @string @P { get; set; }
    }
 }
-");
+" );
     }
 
     [TestMethod]
-    public void RoundtripMissingToken()
+    public void RoundtripMissingToken ( )
     {
-        Test("class");
+        Test( "class" );
     }
 
-    private void Test(string sourceText, string expected, bool useDefaultFormatting = true)
+    private void Test ( string sourceText, string expected, bool useDefaultFormatting = true )
     {
-        var quoter = new Quoter
-        {
-            UseDefaultFormatting = useDefaultFormatting,
-        };
+        var quoter = new Quoter( useDefaultFormatting: useDefaultFormatting);
         var actual = quoter.Quote(sourceText);
-        Assert.AreEqual(expected, actual);
+        Assert.AreEqual( expected, actual );
 
-        Test(sourceText);
+        Test( sourceText );
     }
 
-    private void Test(string sourceText)
+    private void Test ( string sourceText )
     {
-        Test(sourceText, useDefaultFormatting: true, removeRedundantCalls: true);
-        Test(sourceText, useDefaultFormatting: false, removeRedundantCalls: true);
+        Test( sourceText, useDefaultFormatting: true, removeRedundantCalls: true );
+        Test( sourceText, useDefaultFormatting: false, removeRedundantCalls: true );
     }
 
-    private static void Test(string sourceText, bool useDefaultFormatting, bool removeRedundantCalls)
+    private static void Test ( string sourceText, bool useDefaultFormatting, bool removeRedundantCalls )
     {
-        if (useDefaultFormatting)
+        if ( useDefaultFormatting )
         {
             sourceText = CSharpSyntaxTree
-                .ParseText(sourceText)
-                .GetRoot()
-                .NormalizeWhitespace()
-                .ToFullString();
+                .ParseText( sourceText )
+                .GetRoot( )
+                .NormalizeWhitespace( )
+                .ToFullString( );
         }
 
-        var quoter = new Quoter 
-        { 
-            UseDefaultFormatting = useDefaultFormatting,
-            RemoveRedundantModifyingCalls = removeRedundantCalls
-        };
+        var quoter = new Quoter( useDefaultFormatting: useDefaultFormatting, removeRedundantModifyingCalls: removeRedundantCalls);
         var generatedCode = quoter.Quote(sourceText);
 
         ////var evaluator = new Evaluator();
@@ -446,37 +439,37 @@ namespace @N
         ////Assert.AreEqual(sourceText, resultText);
     }
 
-    public void CheckSourceFiles()
+    public void CheckSourceFiles ( )
     {
         var rootFolder = @"E:\Roslyn\Main";
         var files = Directory.GetFiles(rootFolder, "*.cs", SearchOption.AllDirectories);
-        for (int i = 0; i < files.Length; i++)
+        for ( int i = 0; i < files.Length; i++ )
         {
-            VerifyRoundtrip(files[i]);
+            VerifyRoundtrip( files [ i ] );
         }
     }
 
-    public void VerifyRoundtrip(string file)
+    public void VerifyRoundtrip ( string file )
     {
         try
         {
             var sourceText = File.ReadAllText(file);
-            if (sourceText.Length > 50000)
+            if ( sourceText.Length > 50000 )
             {
                 //Log("Skipped large file: " + file);
                 return;
             }
 
-            Test(sourceText);
+            Test( sourceText );
         }
         catch (Exception)
         {
-            Log("Failed: " + file);
+            Log( "Failed: " + file );
         }
     }
 
-    private static void Log(string text)
+    private static void Log ( string text )
     {
-        File.AppendAllText(@"E:\Failed.txt", text + Environment.NewLine);
+        File.AppendAllText( @"E:\Failed.txt", text + Environment.NewLine );
     }
 }
