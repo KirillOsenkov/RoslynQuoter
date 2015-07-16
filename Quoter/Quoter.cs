@@ -196,7 +196,7 @@ public class Quoter
             node is SwitchLabelSyntax ||
             node is YieldStatementSyntax)
         {
-            result.Add(new ApiCall("Kind", "SyntaxKind." + node.CSharpKind().ToString()));
+            result.Add(new ApiCall("Kind", "SyntaxKind." + node.Kind().ToString()));
         }
 
         return result;
@@ -311,7 +311,7 @@ public class Quoter
 
     private ApiCall QuoteToken(SyntaxToken value, string name)
     {
-        if (value == default(SyntaxToken) || value.CSharpKind() == SyntaxKind.None)
+        if (value == default(SyntaxToken) || value.Kind() == SyntaxKind.None)
         {
             return null;
         }
@@ -329,7 +329,7 @@ public class Quoter
             trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
         }
 
-        if (value.CSharpKind() == SyntaxKind.IdentifierToken)
+        if (value.Kind() == SyntaxKind.IdentifierToken)
         {
             methodName = "SyntaxFactory.Identifier";
             if (value.IsMissing)
@@ -339,7 +339,7 @@ public class Quoter
 
             if (value.IsMissing)
             {
-                actualValue = value.CSharpKind();
+                actualValue = value.Kind();
             }
             else
             {
@@ -350,16 +350,16 @@ public class Quoter
             arguments.Add(actualValue);
             AddIfNotNull(arguments, trailing);
         }
-        else if (value.CSharpKind() == SyntaxKind.XmlTextLiteralToken ||
-            value.CSharpKind() == SyntaxKind.XmlTextLiteralNewLineToken ||
-            value.CSharpKind() == SyntaxKind.XmlEntityLiteralToken)
+        else if (value.Kind() == SyntaxKind.XmlTextLiteralToken ||
+            value.Kind() == SyntaxKind.XmlTextLiteralNewLineToken ||
+            value.Kind() == SyntaxKind.XmlEntityLiteralToken)
         {
             methodName = "SyntaxFactory.XmlTextLiteral";
-            if (value.CSharpKind() == SyntaxKind.XmlTextLiteralNewLineToken)
+            if (value.Kind() == SyntaxKind.XmlTextLiteralNewLineToken)
             {
                 methodName = "SyntaxFactory.XmlTextNewLine";
             }
-            else if (value.CSharpKind() == SyntaxKind.XmlEntityLiteralToken)
+            else if (value.Kind() == SyntaxKind.XmlEntityLiteralToken)
             {
                 methodName = "SyntaxFactory.XmlEntity";
             }
@@ -370,18 +370,18 @@ public class Quoter
             arguments.Add(trailing ?? GetEmptyTrivia("TrailingTrivia"));
         }
         else if ((value.Parent is LiteralExpressionSyntax ||
-            value.CSharpKind() == SyntaxKind.StringLiteralToken ||
-            value.CSharpKind() == SyntaxKind.NumericLiteralToken) &&
-            value.CSharpKind() != SyntaxKind.TrueKeyword &&
-            value.CSharpKind() != SyntaxKind.FalseKeyword &&
-            value.CSharpKind() != SyntaxKind.NullKeyword &&
-            value.CSharpKind() != SyntaxKind.ArgListKeyword)
+            value.Kind() == SyntaxKind.StringLiteralToken ||
+            value.Kind() == SyntaxKind.NumericLiteralToken) &&
+            value.Kind() != SyntaxKind.TrueKeyword &&
+            value.Kind() != SyntaxKind.FalseKeyword &&
+            value.Kind() != SyntaxKind.NullKeyword &&
+            value.Kind() != SyntaxKind.ArgListKeyword)
         {
             methodName = "SyntaxFactory.Literal";
             arguments.Add(leading ?? GetEmptyTrivia("LeadingTrivia"));
             arguments.Add(escapedTokenValueText);
             string escapedValue = value.ToString();
-            if (value.CSharpKind() == SyntaxKind.StringLiteralToken)
+            if (value.Kind() == SyntaxKind.StringLiteralToken)
             {
                 escapedValue = escapedTokenValueText;
             }
@@ -396,16 +396,16 @@ public class Quoter
                 methodName = "SyntaxFactory.MissingToken";
             }
 
-            if (value.CSharpKind() == SyntaxKind.BadToken)
+            if (value.Kind() == SyntaxKind.BadToken)
             {
                 methodName = "SyntaxFactory.BadToken";
                 leading = leading ?? GetEmptyTrivia("LeadingTrivia");
                 trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
             }
 
-            object tokenValue = value.CSharpKind();
+            object tokenValue = value.Kind();
 
-            if (value.CSharpKind() == SyntaxKind.BadToken)
+            if (value.Kind() == SyntaxKind.BadToken)
             {
                 tokenValue = escapedTokenValueText;
             }
@@ -464,14 +464,14 @@ public class Quoter
         string factoryMethodName = "SyntaxFactory.Trivia";
         string text = syntaxTrivia.ToString();
         if (syntaxTrivia.FullSpan.Length == 0 ||
-            (syntaxTrivia.CSharpKind() == SyntaxKind.WhitespaceTrivia && UseDefaultFormatting))
+            (syntaxTrivia.Kind() == SyntaxKind.WhitespaceTrivia && UseDefaultFormatting))
         {
             return null;
         }
 
         FieldInfo field = null;
         if (triviaFactoryFields.TryGetValue(syntaxTrivia.ToString(), out field) &&
-            ((SyntaxTrivia)field.GetValue(null)).CSharpKind() == syntaxTrivia.CSharpKind())
+            ((SyntaxTrivia)field.GetValue(null)).Kind() == syntaxTrivia.Kind())
         {
             if (UseDefaultFormatting)
             {
@@ -483,7 +483,7 @@ public class Quoter
 
         if (!string.IsNullOrEmpty(text) &&
             string.IsNullOrWhiteSpace(text) &&
-            syntaxTrivia.CSharpKind() == SyntaxKind.WhitespaceTrivia)
+            syntaxTrivia.Kind() == SyntaxKind.WhitespaceTrivia)
         {
             if (UseDefaultFormatting)
             {
@@ -493,23 +493,23 @@ public class Quoter
             factoryMethodName = "SyntaxFactory.Whitespace";
         }
 
-        if (syntaxTrivia.CSharpKind() == SyntaxKind.SingleLineCommentTrivia ||
-            syntaxTrivia.CSharpKind() == SyntaxKind.MultiLineCommentTrivia)
+        if (syntaxTrivia.Kind() == SyntaxKind.SingleLineCommentTrivia ||
+            syntaxTrivia.Kind() == SyntaxKind.MultiLineCommentTrivia)
         {
             factoryMethodName = "SyntaxFactory.Comment";
         }
 
-        if (syntaxTrivia.CSharpKind() == SyntaxKind.PreprocessingMessageTrivia)
+        if (syntaxTrivia.Kind() == SyntaxKind.PreprocessingMessageTrivia)
         {
             factoryMethodName = "SyntaxFactory.PreprocessingMessage";
         }
 
-        if (syntaxTrivia.CSharpKind() == SyntaxKind.DisabledTextTrivia)
+        if (syntaxTrivia.Kind() == SyntaxKind.DisabledTextTrivia)
         {
             factoryMethodName = "SyntaxFactory.DisabledText";
         }
 
-        if (syntaxTrivia.CSharpKind() == SyntaxKind.DocumentationCommentExteriorTrivia)
+        if (syntaxTrivia.Kind() == SyntaxKind.DocumentationCommentExteriorTrivia)
         {
             factoryMethodName = "SyntaxFactory.DocumentationCommentExterior";
         }
@@ -713,7 +713,7 @@ public class Quoter
         // parameter only allows true/false/null literals
         if (node is LiteralExpressionSyntax)
         {
-            SyntaxKind kind = ((LiteralExpressionSyntax)node).CSharpKind();
+            SyntaxKind kind = ((LiteralExpressionSyntax)node).Kind();
             if (kind != SyntaxKind.TrueLiteralExpression &&
                 kind != SyntaxKind.FalseLiteralExpression &&
                 kind != SyntaxKind.NullLiteralExpression)

@@ -9,6 +9,27 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 public class Tests
 {
     [TestMethod]
+    public void TestUsingSystem()
+    {
+        Test("using System;", @"SyntaxFactory.CompilationUnit()
+.WithUsings(
+    SyntaxFactory.SingletonList<UsingDirectiveSyntax>(
+        SyntaxFactory.UsingDirective(
+            SyntaxFactory.IdentifierName(
+                @""System""))
+        .WithUsingKeyword(
+            SyntaxFactory.Token(
+                SyntaxKind.UsingKeyword))
+        .WithSemicolonToken(
+            SyntaxFactory.Token(
+                SyntaxKind.SemicolonToken))))
+.WithEndOfFileToken(
+    SyntaxFactory.Token(
+        SyntaxKind.EndOfFileToken))
+.NormalizeWhitespace()");
+    }
+
+    [TestMethod]
     public void TestSimpleClass()
     {
         Test("class C { }", @"SyntaxFactory.CompilationUnit()
