@@ -11,7 +11,8 @@ public class Tests
     [TestMethod]
     public void TestUsingSystem()
     {
-        Test("using System;", @"SyntaxFactory.CompilationUnit()
+        Test(@"using System;
+", @"SyntaxFactory.CompilationUnit()
 .WithUsings(
     SyntaxFactory.SingletonList<UsingDirectiveSyntax>(
         SyntaxFactory.UsingDirective(

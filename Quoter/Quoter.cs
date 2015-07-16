@@ -469,16 +469,16 @@ public class Quoter
             return null;
         }
 
-        FieldInfo field = null;
-        if (triviaFactoryFields.TryGetValue(syntaxTrivia.ToString(), out field) &&
-            ((SyntaxTrivia)field.GetValue(null)).Kind() == syntaxTrivia.Kind())
+        PropertyInfo triviaFactoryProperty = null;
+        if (triviaFactoryProperties.TryGetValue(syntaxTrivia.ToString(), out triviaFactoryProperty) &&
+            ((SyntaxTrivia)triviaFactoryProperty.GetValue(null)).Kind() == syntaxTrivia.Kind())
         {
             if (UseDefaultFormatting)
             {
                 return null;
             }
 
-            return new ApiCall(null, "SyntaxFactory." + field.Name);
+            return new ApiCall(null, "SyntaxFactory." + triviaFactoryProperty.Name);
         }
 
         if (!string.IsNullOrEmpty(text) &&
@@ -638,28 +638,28 @@ public class Quoter
     }
 
     /// <summary>
-    /// Static methods on Roslyn.Compilers.CSharp.Syntax class that construct SyntaxNodes
+    /// Static methods on Microsoft.CodeAnalysis.CSharp.SyntaxFactory class that construct SyntaxNodes
     /// </summary>
     /// <example>Syntax.ClassDeclaration()</example>
     private static readonly Dictionary<string, List<MethodInfo>> factoryMethods = GetFactoryMethods();
 
     /// <summary>
-    /// Five public fields on Roslyn.Compilers.CSharp.Syntax that return trivia: CarriageReturn,
+    /// Five public properties on Microsoft.CodeAnalysis.CSharp.SyntaxFactory that return trivia: CarriageReturn,
     /// LineFeed, CarriageReturnLineFeed, Space and Tab.
     /// </summary>
-    private static readonly Dictionary<string, FieldInfo> triviaFactoryFields = GetTriviaFactoryFields();
+    private static readonly Dictionary<string, PropertyInfo> triviaFactoryProperties = GetTriviaFactoryProperties();
 
     /// <summary>
-    /// Gets the five fields on Syntax that return ready-made trivia: CarriageReturn,
+    /// Gets the five properties on SyntaxFactory that return ready-made trivia: CarriageReturn,
     /// CarriageReturnLineFeed, LineFeed, Space and Tab.
     /// </summary>
-    private static Dictionary<string, FieldInfo> GetTriviaFactoryFields()
+    private static Dictionary<string, PropertyInfo> GetTriviaFactoryProperties()
     {
         var result = typeof(SyntaxFactory)
-            .GetFields(BindingFlags.Public | BindingFlags.Static)
-            .Where(fieldInfo => fieldInfo.FieldType == typeof(SyntaxTrivia))
-            .Where(fieldInfo => !fieldInfo.Name.Contains("Elastic"))
-            .ToDictionary(fieldInfo => ((SyntaxTrivia)fieldInfo.GetValue(null)).ToString());
+            .GetProperties(BindingFlags.Public | BindingFlags.Static)
+            .Where(propertyInfo => propertyInfo.PropertyType == typeof(SyntaxTrivia))
+            .Where(propertyInfo => !propertyInfo.Name.Contains("Elastic"))
+            .ToDictionary(propertyInfo => ((SyntaxTrivia)propertyInfo.GetValue(null)).ToString());
 
         return result;
     }
