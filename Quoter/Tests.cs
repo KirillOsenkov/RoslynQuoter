@@ -412,6 +412,12 @@ namespace @N
     }
 
     [TestMethod]
+    public void Roundtrip27()
+    {
+        Test("class C { void M() { int x; x = 42; } }");
+    }
+
+    [TestMethod]
     public void RoundtripMissingToken()
     {
         Test("class");
