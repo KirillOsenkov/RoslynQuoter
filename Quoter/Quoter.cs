@@ -180,6 +180,7 @@ public class Quoter
         // that we filter out above. Add an artificial "property value" that can be later used to
         // satisfy the first parameter of type SyntaxKind.
         if (node is AccessorDeclarationSyntax ||
+            node is AssignmentExpressionSyntax ||
             node is BinaryExpressionSyntax ||
             node is ClassOrStructConstraintSyntax ||
             node is CheckedExpressionSyntax ||
