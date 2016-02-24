@@ -18,7 +18,7 @@ namespace QuoterService.Controllers
             bool keepRedundantApiCalls = false,
             bool avoidUsingStatic = false)
         {
-            string responseText = "test";
+            string responseText = "Quoter is currently down for maintenance. Please check back later.";
             if (string.IsNullOrEmpty(sourceText))
             {
                 responseText = "Please specify the source text.";
