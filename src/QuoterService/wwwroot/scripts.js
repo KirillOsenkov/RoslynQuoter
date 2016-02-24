@@ -48,6 +48,8 @@ function getUrl(url, callback) {
                 callback(data);
             }
         }
+
+        enableSubmit(true);
     };
     xhr.send();
     return xhr;
@@ -74,6 +76,5 @@ function setResult(data) {
 }
 
 function loadResults(data) {
-    enableSubmit(true);
     setResult(data);
 }
