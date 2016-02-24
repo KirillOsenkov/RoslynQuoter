@@ -31,16 +31,16 @@ namespace QuoterService.Controllers
             {
                 try
                 {
-                    //var quoter = new Quoter
-                    //{
-                    //    OpenParenthesisOnNewLine = openCurlyOnNewLine,
-                    //    ClosingParenthesisOnNewLine = closeCurlyOnNewLine,
-                    //    UseDefaultFormatting = !preserveOriginalWhitespace,
-                    //    RemoveRedundantModifyingCalls = !keepRedundantApiCalls,
-                    //    ShortenCodeWithUsingStatic = !avoidUsingStatic
-                    //};
+                    var quoter = new Quoter
+                    {
+                        OpenParenthesisOnNewLine = openCurlyOnNewLine,
+                        ClosingParenthesisOnNewLine = closeCurlyOnNewLine,
+                        UseDefaultFormatting = !preserveOriginalWhitespace,
+                        RemoveRedundantModifyingCalls = !keepRedundantApiCalls,
+                        ShortenCodeWithUsingStatic = !avoidUsingStatic
+                    };
 
-                    //responseText = quoter.Quote(sourceText);
+                    responseText = quoter.Quote(sourceText);
                 }
                 catch (Exception ex)
                 {
