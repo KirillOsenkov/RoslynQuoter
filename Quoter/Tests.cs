@@ -9,7 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 public class Tests
 {
     [TestMethod]
-    public void TestUsingSystem()
+    public void TestUsingSystemWithRedundantCalls()
     {
         Test(@"using System;
 ", @"SyntaxFactory.CompilationUnit()
@@ -27,6 +27,19 @@ public class Tests
 .WithEndOfFileToken(
     SyntaxFactory.Token(
         SyntaxKind.EndOfFileToken))
+.NormalizeWhitespace()", removeRedundantModifyingCalls: false);
+    }
+
+    [TestMethod]
+    public void TestUsingSystem()
+    {
+        Test(@"using System;
+", @"SyntaxFactory.CompilationUnit()
+.WithUsings(
+    SyntaxFactory.SingletonList<UsingDirectiveSyntax>(
+        SyntaxFactory.UsingDirective(
+            SyntaxFactory.IdentifierName(
+                @""System""))))
 .NormalizeWhitespace()");
     }
 
@@ -50,7 +63,7 @@ public class Tests
 .WithEndOfFileToken(
     SyntaxFactory.Token(
         SyntaxKind.EndOfFileToken))
-.NormalizeWhitespace()");
+.NormalizeWhitespace()", removeRedundantModifyingCalls: false);
     }
 
     [TestMethod]
@@ -74,7 +87,7 @@ public class Tests
 .WithEndOfFileToken(
     SyntaxFactory.Token(
         SyntaxKind.EndOfFileToken))
-.NormalizeWhitespace()");
+.NormalizeWhitespace()", removeRedundantModifyingCalls: false);
     }
 
     [TestMethod]
@@ -226,7 +239,7 @@ namespace N
 .WithEndOfFileToken(
     SyntaxFactory.Token(
         SyntaxKind.EndOfFileToken))
-.NormalizeWhitespace()");
+.NormalizeWhitespace()", removeRedundantModifyingCalls: false);
     }
 
     [TestMethod]
@@ -423,11 +436,12 @@ namespace @N
         Test("class");
     }
 
-    private void Test(string sourceText, string expected, bool useDefaultFormatting = true)
+    private void Test(string sourceText, string expected, bool useDefaultFormatting = true, bool removeRedundantModifyingCalls = true)
     {
         var quoter = new Quoter
         {
             UseDefaultFormatting = useDefaultFormatting,
+            RemoveRedundantModifyingCalls = removeRedundantModifyingCalls
         };
         var actual = quoter.Quote(sourceText);
         Assert.AreEqual(expected, actual);

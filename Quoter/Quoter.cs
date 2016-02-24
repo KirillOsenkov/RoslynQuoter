@@ -49,7 +49,7 @@ public class Quoter
 
     private readonly ScriptOptions options = ScriptOptions.Default
         .AddReferences(typeof(SyntaxNode).Assembly, typeof(CSharpSyntaxNode).Assembly)
-        .AddImports("Microsoft.CodeAnalysis", "Microsoft.CodeAnalysis.CSharp");
+        .AddImports("Microsoft.CodeAnalysis", "Microsoft.CodeAnalysis.CSharp", "Microsoft.CodeAnalysis.CSharp.Syntax");
 
     public Quoter()
     {
