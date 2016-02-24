@@ -36,6 +36,8 @@ namespace QuoterService
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
+            app.UseFileServer();
+
             app.UseIISPlatformHandler();
 
             app.UseStaticFiles();
