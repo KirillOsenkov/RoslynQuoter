@@ -110,6 +110,12 @@ public class Tests
     }
 
     [TestMethod]
+    public void TestEmptyBlock()
+    {
+        Test(@"class C { void M() { } }");
+    }
+
+    [TestMethod]
     public void TestHelloWorld()
     {
         Test(@"using System;
@@ -382,7 +388,8 @@ int i
         Test(
             File.ReadAllText(GetPath(filePath)),
             useDefaultFormatting: false,
-            removeRedundantCalls: false);
+            removeRedundantCalls: false,
+            shortenCodeWithUsingStatic: true);
     }
 
     [TestMethod]
@@ -470,11 +477,11 @@ namespace @N
 
     private void Test(string sourceText)
     {
-        Test(sourceText, useDefaultFormatting: true, removeRedundantCalls: true);
-        Test(sourceText, useDefaultFormatting: false, removeRedundantCalls: true);
+        Test(sourceText, useDefaultFormatting: true, removeRedundantCalls: true, shortenCodeWithUsingStatic: false);
+        Test(sourceText, useDefaultFormatting: false, removeRedundantCalls: true, shortenCodeWithUsingStatic: true);
     }
 
-    private static void Test(string sourceText, bool useDefaultFormatting, bool removeRedundantCalls)
+    private static void Test(string sourceText, bool useDefaultFormatting, bool removeRedundantCalls, bool shortenCodeWithUsingStatic)
     {
         if (useDefaultFormatting)
         {

@@ -615,6 +615,12 @@ public class Quoter
             }
             else if (!factoryMethodParameter.IsOptional)
             {
+                if (parameterType.IsArray)
+                {
+                    // assuming this is a params parameter that accepts an array, so if we have nothing we don't need to pass anything
+                    continue;
+                }
+
                 throw new InvalidOperationException(
                     string.Format(
                         "Couldn't find value for parameter '{0}' of method '{1}'. Go to QuotePropertyValues() and add your node type to the exception list.",
@@ -710,7 +716,7 @@ public class Quoter
         var staticMethods = typeof(SyntaxFactory).GetMethods(
             BindingFlags.Public | BindingFlags.Static);
 
-        foreach (var method in staticMethods)
+        foreach (var method in staticMethods.OrderBy(m => m.ToString()))
         {
             var returnTypeName = method.ReturnType.Name;
 
@@ -770,7 +776,21 @@ public class Quoter
             }
         }
 
-        factory = candidates.First(m => m.GetParameters().Length == minParameterCount);
+        var candidatesWithMinParameterCount = candidates.Where(m => m.GetParameters().Length == minParameterCount).ToArray();
+
+        if (minParameterCount == 1 && candidatesWithMinParameterCount.Length > 1)
+        {
+            // if there are multiple candidates with one parameter, pick the one that is optional
+            var firstParameterOptional = candidatesWithMinParameterCount.FirstOrDefault(m => m.GetParameters()[0].IsOptional);
+            if (firstParameterOptional != null)
+            {
+                return firstParameterOptional;
+            }
+        }
+
+        // otherwise just pick the first one (this is arbitrary)
+        factory = candidatesWithMinParameterCount[0];
+
         return factory;
     }
 
