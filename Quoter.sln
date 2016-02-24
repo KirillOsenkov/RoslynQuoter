@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.30723.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quoter", "src\Quoter\Quoter.csproj", "{927AB47F-479C-423A-B21F-5DEC48533E1D}"
 EndProject
@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{6FCB47
 		.nuget\NuGet.exe = .nuget\NuGet.exe
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "QuoterService", "src\QuoterService\QuoterService.xproj", "{5A5372E1-6DE1-46E5-ABF1-EE5515C8EA3C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,6 +24,10 @@ Global
 		{927AB47F-479C-423A-B21F-5DEC48533E1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{927AB47F-479C-423A-B21F-5DEC48533E1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{927AB47F-479C-423A-B21F-5DEC48533E1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A5372E1-6DE1-46E5-ABF1-EE5515C8EA3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A5372E1-6DE1-46E5-ABF1-EE5515C8EA3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A5372E1-6DE1-46E5-ABF1-EE5515C8EA3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A5372E1-6DE1-46E5-ABF1-EE5515C8EA3C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
