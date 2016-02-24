@@ -170,3 +170,4 @@ Backup*/
 UpgradeLog*.XML
 UpgradeLog*.htm
 /src/QuoterService/project.lock.json
+/src/QuoterService/Properties/PublishProfiles/roslynquoter - Web Deploy-publish.ps1
