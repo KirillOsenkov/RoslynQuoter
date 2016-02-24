@@ -82,7 +82,7 @@ public class Quoter
     /// <param name="sourceText">A C# syntax node</param>
     /// <returns>A C# expression that describes calls to the Roslyn syntax API necessary to recreate
     /// the input syntax node.</returns>
-    public string Quote(SyntaxNode node)
+    internal string Quote(SyntaxNode node)
     {
         ApiCall rootApiCall = Quote(node, name: null);
         if (UseDefaultFormatting)
