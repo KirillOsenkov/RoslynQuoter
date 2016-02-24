@@ -46,10 +46,15 @@ public class Quoter
     public bool ClosingParenthesisOnNewLine { get; set; }
     public bool UseDefaultFormatting { get; set; }
     public bool RemoveRedundantModifyingCalls { get; set; }
+    public bool ShortenCodeWithUsingStatic { get; set; }
 
     private readonly ScriptOptions options = ScriptOptions.Default
         .AddReferences(typeof(SyntaxNode).Assembly, typeof(CSharpSyntaxNode).Assembly)
-        .AddImports("Microsoft.CodeAnalysis", "Microsoft.CodeAnalysis.CSharp", "Microsoft.CodeAnalysis.CSharp.Syntax");
+        .AddImports(
+            "Microsoft.CodeAnalysis",
+            "Microsoft.CodeAnalysis.CSharp",
+            "Microsoft.CodeAnalysis.CSharp.Syntax",
+            "Microsoft.CodeAnalysis.CSharp.SyntaxFactory");
 
     public Quoter()
     {
@@ -151,10 +156,16 @@ public class Quoter
     {
         List<ApiCall> quotedPropertyValues = QuotePropertyValues(node);
         MethodInfo factoryMethod = PickFactoryMethodToCreateNode(node);
+        string factoryMethodName = factoryMethod.Name;
+
+        if (!ShortenCodeWithUsingStatic)
+        {
+            factoryMethodName = factoryMethod.DeclaringType.Name + "." + factoryMethodName;
+        }
 
         var factoryMethodCall = new MethodCall()
         {
-            Name = factoryMethod.DeclaringType.Name + "." + factoryMethod.Name
+            Name = factoryMethodName
         };
 
         var codeBlock = new ApiCall(name, factoryMethodCall);
@@ -253,11 +264,21 @@ public class Quoter
         return null;
     }
 
+    private string SyntaxFactory(string text)
+    {
+        if (!ShortenCodeWithUsingStatic)
+        {
+            text = "SyntaxFactory." + text;
+        }
+
+        return text;
+    }
+
     private ApiCall QuoteList(IEnumerable syntaxList, string name)
     {
         IEnumerable<object> sourceList = syntaxList.Cast<object>();
 
-        string methodName = "SyntaxFactory.List";
+        string methodName = SyntaxFactory("List");
         string listType = null;
         var propertyType = syntaxList.GetType();
         if (propertyType.IsGenericType)
@@ -268,7 +289,7 @@ public class Quoter
             if (propertyType.GetGenericTypeDefinition() == typeof(SeparatedSyntaxList<>))
             {
                 listType = "SyntaxNodeOrToken";
-                methodName = "SyntaxFactory.SeparatedList";
+                methodName = SyntaxFactory("SeparatedList");
                 sourceList = ((SyntaxNodeOrTokenList)
                     syntaxList.GetType().GetMethod("GetWithSeparators").Invoke(syntaxList, null))
                     .Cast<object>()
@@ -280,12 +301,12 @@ public class Quoter
 
         if (propertyType.Name == "SyntaxTokenList")
         {
-            methodName = "SyntaxFactory.TokenList";
+            methodName = SyntaxFactory("TokenList");
         }
 
         if (propertyType.Name == "SyntaxTriviaList")
         {
-            methodName = "SyntaxFactory.TriviaList";
+            methodName = SyntaxFactory("TriviaList");
         }
 
         var elements = new List<object>(sourceList
@@ -297,8 +318,15 @@ public class Quoter
         }
         else if (elements.Count == 1)
         {
-            methodName = methodName.Replace(".List", ".SingletonList");
-            methodName = methodName.Replace(".SeparatedList", ".SingletonSeparatedList");
+            if (methodName.StartsWith("List") || methodName.StartsWith(SyntaxFactory("List")))
+            {
+                methodName = methodName.Replace("List", "SingletonList");
+            }
+
+            if (methodName.StartsWith("SeparatedList") || methodName.StartsWith(SyntaxFactory("SeparatedList")))
+            {
+                methodName = methodName.Replace("SeparatedList", "SingletonSeparatedList");
+            }
         }
         else
         {
@@ -324,7 +352,7 @@ public class Quoter
         }
 
         var arguments = new List<object>();
-        string methodName = "SyntaxFactory.Token";
+        string methodName = SyntaxFactory("Token");
         string escapedTokenValueText = "@\"" + Escape(value.ToString()) + "\"";
         object leading = GetLeadingTrivia(value);
         object actualValue;
@@ -338,10 +366,10 @@ public class Quoter
 
         if (value.Kind() == SyntaxKind.IdentifierToken)
         {
-            methodName = "SyntaxFactory.Identifier";
+            methodName = SyntaxFactory("Identifier");
             if (value.IsMissing)
             {
-                methodName = "SyntaxFactory.MissingToken";
+                methodName = SyntaxFactory("MissingToken");
             }
 
             if (value.IsMissing)
@@ -361,14 +389,14 @@ public class Quoter
             value.Kind() == SyntaxKind.XmlTextLiteralNewLineToken ||
             value.Kind() == SyntaxKind.XmlEntityLiteralToken)
         {
-            methodName = "SyntaxFactory.XmlTextLiteral";
+            methodName = SyntaxFactory("XmlTextLiteral");
             if (value.Kind() == SyntaxKind.XmlTextLiteralNewLineToken)
             {
-                methodName = "SyntaxFactory.XmlTextNewLine";
+                methodName = SyntaxFactory("XmlTextNewLine");
             }
             else if (value.Kind() == SyntaxKind.XmlEntityLiteralToken)
             {
-                methodName = "SyntaxFactory.XmlEntity";
+                methodName = SyntaxFactory("XmlEntity");
             }
 
             arguments.Add(leading ?? GetEmptyTrivia("LeadingTrivia"));
@@ -384,7 +412,7 @@ public class Quoter
             value.Kind() != SyntaxKind.NullKeyword &&
             value.Kind() != SyntaxKind.ArgListKeyword)
         {
-            methodName = "SyntaxFactory.Literal";
+            methodName = SyntaxFactory("Literal");
             arguments.Add(leading ?? GetEmptyTrivia("LeadingTrivia"));
             arguments.Add(escapedTokenValueText);
             string escapedValue = value.ToString();
@@ -400,12 +428,12 @@ public class Quoter
         {
             if (value.IsMissing)
             {
-                methodName = "SyntaxFactory.MissingToken";
+                methodName = SyntaxFactory("MissingToken");
             }
 
             if (value.Kind() == SyntaxKind.BadToken)
             {
-                methodName = "SyntaxFactory.BadToken";
+                methodName = SyntaxFactory("BadToken");
                 leading = leading ?? GetEmptyTrivia("LeadingTrivia");
                 trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
             }
@@ -463,12 +491,12 @@ public class Quoter
 
     private object GetEmptyTrivia(string parentPropertyName)
     {
-        return new ApiCall(parentPropertyName, "SyntaxFactory.TriviaList", arguments: null);
+        return new ApiCall(parentPropertyName, SyntaxFactory("TriviaList"), arguments: null);
     }
 
     private ApiCall QuoteTrivia(SyntaxTrivia syntaxTrivia)
     {
-        string factoryMethodName = "SyntaxFactory.Trivia";
+        string factoryMethodName = SyntaxFactory("Trivia");
         string text = syntaxTrivia.ToString();
         if (syntaxTrivia.FullSpan.Length == 0 ||
             (syntaxTrivia.Kind() == SyntaxKind.WhitespaceTrivia && UseDefaultFormatting))
@@ -485,7 +513,7 @@ public class Quoter
                 return null;
             }
 
-            return new ApiCall(null, "SyntaxFactory." + triviaFactoryProperty.Name);
+            return new ApiCall(null, SyntaxFactory(triviaFactoryProperty.Name));
         }
 
         if (!string.IsNullOrEmpty(text) &&
@@ -497,28 +525,28 @@ public class Quoter
                 return null;
             }
 
-            factoryMethodName = "SyntaxFactory.Whitespace";
+            factoryMethodName = SyntaxFactory("Whitespace");
         }
 
         if (syntaxTrivia.Kind() == SyntaxKind.SingleLineCommentTrivia ||
             syntaxTrivia.Kind() == SyntaxKind.MultiLineCommentTrivia)
         {
-            factoryMethodName = "SyntaxFactory.Comment";
+            factoryMethodName = SyntaxFactory("Comment");
         }
 
         if (syntaxTrivia.Kind() == SyntaxKind.PreprocessingMessageTrivia)
         {
-            factoryMethodName = "SyntaxFactory.PreprocessingMessage";
+            factoryMethodName = SyntaxFactory("PreprocessingMessage");
         }
 
         if (syntaxTrivia.Kind() == SyntaxKind.DisabledTextTrivia)
         {
-            factoryMethodName = "SyntaxFactory.DisabledText";
+            factoryMethodName = SyntaxFactory("DisabledText");
         }
 
         if (syntaxTrivia.Kind() == SyntaxKind.DocumentationCommentExteriorTrivia)
         {
-            factoryMethodName = "SyntaxFactory.DocumentationCommentExterior";
+            factoryMethodName = SyntaxFactory("DocumentationCommentExterior");
         }
 
         object argument = "@\"" + Escape(syntaxTrivia.ToString()) + "\"";
@@ -543,13 +571,13 @@ public class Quoter
 
             ApiCall quotedCodeBlock = FindValue(parameterName, quotedValues);
 
-            // special case to prefer Syntax.IdentifierName("C") to 
-            // Syntax.IdentifierName(Syntax.Identifier("C"))
+            // special case to prefer SyntaxFactory.IdentifierName("C") to 
+            // SyntaxFactory.IdentifierName(Syntax.Identifier("C"))
             if (parameterName == "name" && parameterType == typeof(string))
             {
                 quotedCodeBlock = quotedValues.First(a => a.Name == "Identifier");
                 var methodCall = quotedCodeBlock.FactoryMethodCall as MethodCall;
-                if (methodCall != null && methodCall.Name == "SyntaxFactory.Identifier")
+                if (methodCall != null && methodCall.Name == SyntaxFactory("Identifier"))
                 {
                     if (methodCall.Arguments.Count == 1)
                     {
@@ -565,13 +593,13 @@ public class Quoter
                 }
             }
 
-            // special case to prefer Syntax.ClassDeclarationSyntax(string) instead of 
-            // Syntax.ClassDeclarationSyntax(SyntaxToken)
+            // special case to prefer SyntaxFactory.ClassDeclarationSyntax(string) instead of 
+            // SyntaxFactory.ClassDeclarationSyntax(SyntaxToken)
             if (parameterName == "identifier" && parameterType == typeof(string))
             {
                 var methodCall = quotedCodeBlock.FactoryMethodCall as MethodCall;
                 if (methodCall != null &&
-                    methodCall.Name == "SyntaxFactory.Identifier" &&
+                    methodCall.Name == SyntaxFactory("Identifier") &&
                     methodCall.Arguments.Count == 1)
                 {
                     factoryMethodCall.AddArgument(methodCall.Arguments[0]);
@@ -589,7 +617,7 @@ public class Quoter
             {
                 throw new InvalidOperationException(
                     string.Format(
-                        "Couldn't find value for parameter '{0}' of method '{1}'. Go to QuotePropertyValues and add your node type to the exception list.",
+                        "Couldn't find value for parameter '{0}' of method '{1}'. Go to QuotePropertyValues() and add your node type to the exception list.",
                         parameterName,
                         factory));
             }
@@ -700,7 +728,7 @@ public class Quoter
     }
 
     /// <summary>
-    /// Uses Reflection to inspect static factory methods on the Roslyn.Compilers.CSharp.Syntax
+    /// Uses Reflection to inspect static factory methods on the Microsoft.CodeAnalysis.CSharp.SyntaxFactory
     /// class and pick an overload that creates a node of the same type as the input <paramref
     /// name="node"/>
     /// </summary>

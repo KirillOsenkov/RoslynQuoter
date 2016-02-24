@@ -31,6 +31,19 @@ public class Tests
     }
 
     [TestMethod]
+    public void TestUsingSystemWithUsingStatic()
+    {
+        Test(@"using System;
+", @"CompilationUnit()
+.WithUsings(
+    SingletonList<UsingDirectiveSyntax>(
+        UsingDirective(
+            IdentifierName(
+                @""System""))))
+.NormalizeWhitespace()", shortenCodeWithUsingStatic: true);
+    }
+
+    [TestMethod]
     public void TestUsingSystem()
     {
         Test(@"using System;
@@ -436,12 +449,18 @@ namespace @N
         Test("class");
     }
 
-    private void Test(string sourceText, string expected, bool useDefaultFormatting = true, bool removeRedundantModifyingCalls = true)
+    private void Test(
+        string sourceText, 
+        string expected, 
+        bool useDefaultFormatting = true, 
+        bool removeRedundantModifyingCalls = true,
+        bool shortenCodeWithUsingStatic = false)
     {
         var quoter = new Quoter
         {
             UseDefaultFormatting = useDefaultFormatting,
-            RemoveRedundantModifyingCalls = removeRedundantModifyingCalls
+            RemoveRedundantModifyingCalls = removeRedundantModifyingCalls,
+            ShortenCodeWithUsingStatic = shortenCodeWithUsingStatic
         };
         var actual = quoter.Quote(sourceText);
         Assert.AreEqual(expected, actual);
