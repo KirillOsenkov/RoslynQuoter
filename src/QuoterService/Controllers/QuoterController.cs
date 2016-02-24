@@ -9,11 +9,46 @@ namespace QuoterService.Controllers
     [Route("api/[controller]")]
     public class QuoterController : Controller
     {
-        // GET: api/values
         [HttpGet]
-        public IEnumerable<string> Get()
+        public string Get(
+            string sourceText,
+            bool openCurlyOnNewLine = false,
+            bool closeCurlyOnNewLine = false,
+            bool preserveOriginalWhitespace = false,
+            bool keepRedundantApiCalls = false,
+            bool avoidUsingStatic = false)
         {
-            return new string[] { "value1", "value2" };
+            string responseText = "test";
+            if (string.IsNullOrEmpty(sourceText))
+            {
+                responseText = "Please specify the source text.";
+            }
+            else if (sourceText.Length > 2000)
+            {
+                responseText = "Only strings shorter than 2000 characters are supported; your input string is " + sourceText.Length + " characters long.";
+            }
+            else
+            {
+                try
+                {
+                    //var quoter = new Quoter
+                    //{
+                    //    OpenParenthesisOnNewLine = openCurlyOnNewLine,
+                    //    ClosingParenthesisOnNewLine = closeCurlyOnNewLine,
+                    //    UseDefaultFormatting = !preserveOriginalWhitespace,
+                    //    RemoveRedundantModifyingCalls = !keepRedundantApiCalls,
+                    //    ShortenCodeWithUsingStatic = !avoidUsingStatic
+                    //};
+
+                    //responseText = quoter.Quote(sourceText);
+                }
+                catch (Exception ex)
+                {
+                    responseText = ex.ToString();
+                }
+            }
+
+            return responseText;
         }
 
         // GET api/values/5

@@ -1,0 +1,32 @@
+﻿body {
+    font-family: Segoe UI, Tahoma, Helvetica, sans-serif;
+}
+
+#inputDiv {
+    height: 30%;
+    display: block;
+    padding: 30px;
+    padding-bottom: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#inputBox {
+    width: 100%;
+    height: 150px;
+    text-wrap: normal;
+    margin-bottom: 10px;
+    font-family: Consolas, 'Courier New', monospace;
+}
+
+#submitButton {
+    margin-top: 10px;
+}
+
+#outputDiv {
+    height: 70%;
+    padding: 30px;
+    padding-top: 0px;
+    white-space: pre-wrap;
+    font-family: Consolas, 'Courier New', monospace;
+}
