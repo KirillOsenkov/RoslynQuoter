@@ -48,6 +48,12 @@ namespace QuoterService.Controllers
                 }
             }
 
+            Response.Headers.Add("Cache-Control", new[] { "no-cache" });
+            Response.Headers.Add("Pragma", new[] { "no-cache" });
+            Response.Headers.Add("Expires", new[] { "-1" });
+            Response.Headers.Add("Access-Control-Allow-Origin", new[] { "*" });
+            Response.Headers.Add("Access-Control-Allow-Headers", new[] { "Content-Type" });
+
             return responseText;
         }
 
