@@ -207,11 +207,7 @@ namespace N
                                                     SyntaxFactory.Argument(
                                                         SyntaxFactory.LiteralExpression(
                                                             SyntaxKind.StringLiteralExpression,
-                                                            SyntaxFactory.Literal(
-                                                                SyntaxFactory.TriviaList(),
-                                                                @""""""Hello World"""""",
-                                                                @""""""Hello World"""""",
-                                                                SyntaxFactory.TriviaList())))))
+                                                            SyntaxFactory.Literal(@""""""Hello World"""""")))))
                                             .WithOpenParenToken(
                                                 SyntaxFactory.Token(SyntaxKind.OpenParenToken))
                                             .WithCloseParenToken(

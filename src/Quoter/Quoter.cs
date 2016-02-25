@@ -384,16 +384,29 @@ public class Quoter
             value.Kind() != SyntaxKind.ArgListKeyword)
         {
             methodName = SyntaxFactory("Literal");
-            arguments.Add(leading ?? GetEmptyTrivia("LeadingTrivia"));
-            arguments.Add(escapedTokenValueText);
+            bool shouldAddTrivia = leading != null || trailing != null;
+            if (shouldAddTrivia)
+            {
+                arguments.Add(leading ?? GetEmptyTrivia("LeadingTrivia"));
+            }
+
             string escapedValue = value.ToString();
             if (value.Kind() == SyntaxKind.StringLiteralToken)
             {
                 escapedValue = escapedTokenValueText;
             }
 
+            if (shouldAddTrivia || (escapedValue != escapedTokenValueText && ("\"" + escapedValue + "\"" != escapedTokenValueText)))
+            {
+                arguments.Add(escapedTokenValueText);
+            }
+
             arguments.Add(escapedValue);
-            arguments.Add(trailing ?? GetEmptyTrivia("TrailingTrivia"));
+
+            if (shouldAddTrivia)
+            {
+                arguments.Add(trailing ?? GetEmptyTrivia("TrailingTrivia"));
+            }
         }
         else
         {
