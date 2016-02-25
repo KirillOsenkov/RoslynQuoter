@@ -16,17 +16,13 @@ public class Tests
 .WithUsings(
     SyntaxFactory.SingletonList<UsingDirectiveSyntax>(
         SyntaxFactory.UsingDirective(
-            SyntaxFactory.IdentifierName(
-                ""System""))
+            SyntaxFactory.IdentifierName(""System""))
         .WithUsingKeyword(
-            SyntaxFactory.Token(
-                SyntaxKind.UsingKeyword))
+            SyntaxFactory.Token(SyntaxKind.UsingKeyword))
         .WithSemicolonToken(
-            SyntaxFactory.Token(
-                SyntaxKind.SemicolonToken))))
+            SyntaxFactory.Token(SyntaxKind.SemicolonToken))))
 .WithEndOfFileToken(
-    SyntaxFactory.Token(
-        SyntaxKind.EndOfFileToken))
+    SyntaxFactory.Token(SyntaxKind.EndOfFileToken))
 .NormalizeWhitespace()", removeRedundantModifyingCalls: false);
     }
 
@@ -38,8 +34,7 @@ public class Tests
 .WithUsings(
     SingletonList<UsingDirectiveSyntax>(
         UsingDirective(
-            IdentifierName(
-                ""System""))))
+            IdentifierName(""System""))))
 .NormalizeWhitespace()", shortenCodeWithUsingStatic: true);
     }
 
@@ -51,8 +46,7 @@ public class Tests
 .WithUsings(
     SyntaxFactory.SingletonList<UsingDirectiveSyntax>(
         SyntaxFactory.UsingDirective(
-            SyntaxFactory.IdentifierName(
-                ""System""))))
+            SyntaxFactory.IdentifierName(""System""))))
 .NormalizeWhitespace()");
     }
 
@@ -62,20 +56,15 @@ public class Tests
         Test("class C { }", @"SyntaxFactory.CompilationUnit()
 .WithMembers(
     SyntaxFactory.SingletonList<MemberDeclarationSyntax>(
-        SyntaxFactory.ClassDeclaration(
-            ""C"")
+        SyntaxFactory.ClassDeclaration(""C"")
         .WithKeyword(
-            SyntaxFactory.Token(
-                SyntaxKind.ClassKeyword))
+            SyntaxFactory.Token(SyntaxKind.ClassKeyword))
         .WithOpenBraceToken(
-            SyntaxFactory.Token(
-                SyntaxKind.OpenBraceToken))
+            SyntaxFactory.Token(SyntaxKind.OpenBraceToken))
         .WithCloseBraceToken(
-            SyntaxFactory.Token(
-                SyntaxKind.CloseBraceToken))))
+            SyntaxFactory.Token(SyntaxKind.CloseBraceToken))))
 .WithEndOfFileToken(
-    SyntaxFactory.Token(
-        SyntaxKind.EndOfFileToken))
+    SyntaxFactory.Token(SyntaxKind.EndOfFileToken))
 .NormalizeWhitespace()", removeRedundantModifyingCalls: false);
     }
 
@@ -86,20 +75,15 @@ public class Tests
 .WithMembers(
     SyntaxFactory.SingletonList<MemberDeclarationSyntax>(
         SyntaxFactory.ClassDeclaration(
-            SyntaxFactory.MissingToken(
-                SyntaxKind.IdentifierToken))
+            SyntaxFactory.MissingToken(SyntaxKind.IdentifierToken))
         .WithKeyword(
-            SyntaxFactory.Token(
-                SyntaxKind.ClassKeyword))
+            SyntaxFactory.Token(SyntaxKind.ClassKeyword))
         .WithOpenBraceToken(
-            SyntaxFactory.MissingToken(
-                SyntaxKind.OpenBraceToken))
+            SyntaxFactory.MissingToken(SyntaxKind.OpenBraceToken))
         .WithCloseBraceToken(
-            SyntaxFactory.MissingToken(
-                SyntaxKind.CloseBraceToken))))
+            SyntaxFactory.MissingToken(SyntaxKind.CloseBraceToken))))
 .WithEndOfFileToken(
-    SyntaxFactory.Token(
-        SyntaxKind.EndOfFileToken))
+    SyntaxFactory.Token(SyntaxKind.EndOfFileToken))
 .NormalizeWhitespace()", removeRedundantModifyingCalls: false);
     }
 
@@ -110,20 +94,15 @@ public class Tests
 .WithMembers(
     SingletonList<MemberDeclarationSyntax>(
         ClassDeclaration(
-            MissingToken(
-                SyntaxKind.IdentifierToken))
+            MissingToken(SyntaxKind.IdentifierToken))
         .WithKeyword(
-            Token(
-                SyntaxKind.ClassKeyword))
+            Token(SyntaxKind.ClassKeyword))
         .WithOpenBraceToken(
-            MissingToken(
-                SyntaxKind.OpenBraceToken))
+            MissingToken(SyntaxKind.OpenBraceToken))
         .WithCloseBraceToken(
-            MissingToken(
-                SyntaxKind.CloseBraceToken))))
+            MissingToken(SyntaxKind.CloseBraceToken))))
 .WithEndOfFileToken(
-    Token(
-        SyntaxKind.EndOfFileToken))
+    Token(SyntaxKind.EndOfFileToken))
 .NormalizeWhitespace()", removeRedundantModifyingCalls: false, shortenCodeWithUsingStatic: true);
     }
 
@@ -158,78 +137,59 @@ namespace N
 .WithUsings(
     SyntaxFactory.SingletonList<UsingDirectiveSyntax>(
         SyntaxFactory.UsingDirective(
-            SyntaxFactory.IdentifierName(
-                ""System""))
+            SyntaxFactory.IdentifierName(""System""))
         .WithUsingKeyword(
-            SyntaxFactory.Token(
-                SyntaxKind.UsingKeyword))
+            SyntaxFactory.Token(SyntaxKind.UsingKeyword))
         .WithSemicolonToken(
-            SyntaxFactory.Token(
-                SyntaxKind.SemicolonToken))))
+            SyntaxFactory.Token(SyntaxKind.SemicolonToken))))
 .WithMembers(
     SyntaxFactory.SingletonList<MemberDeclarationSyntax>(
         SyntaxFactory.NamespaceDeclaration(
-            SyntaxFactory.IdentifierName(
-                ""N""))
+            SyntaxFactory.IdentifierName(""N""))
         .WithNamespaceKeyword(
-            SyntaxFactory.Token(
-                SyntaxKind.NamespaceKeyword))
+            SyntaxFactory.Token(SyntaxKind.NamespaceKeyword))
         .WithOpenBraceToken(
-            SyntaxFactory.Token(
-                SyntaxKind.OpenBraceToken))
+            SyntaxFactory.Token(SyntaxKind.OpenBraceToken))
         .WithMembers(
             SyntaxFactory.SingletonList<MemberDeclarationSyntax>(
-                SyntaxFactory.ClassDeclaration(
-                    ""Program"")
+                SyntaxFactory.ClassDeclaration(""Program"")
                 .WithKeyword(
-                    SyntaxFactory.Token(
-                        SyntaxKind.ClassKeyword))
+                    SyntaxFactory.Token(SyntaxKind.ClassKeyword))
                 .WithOpenBraceToken(
-                    SyntaxFactory.Token(
-                        SyntaxKind.OpenBraceToken))
+                    SyntaxFactory.Token(SyntaxKind.OpenBraceToken))
                 .WithMembers(
                     SyntaxFactory.SingletonList<MemberDeclarationSyntax>(
                         SyntaxFactory.MethodDeclaration(
                             SyntaxFactory.PredefinedType(
-                                SyntaxFactory.Token(
-                                    SyntaxKind.VoidKeyword)),
-                            SyntaxFactory.Identifier(
-                                ""Main""))
+                                SyntaxFactory.Token(SyntaxKind.VoidKeyword)),
+                            SyntaxFactory.Identifier(""Main""))
                         .WithModifiers(
                             SyntaxFactory.TokenList(
-                                SyntaxFactory.Token(
-                                    SyntaxKind.StaticKeyword)))
+                                SyntaxFactory.Token(SyntaxKind.StaticKeyword)))
                         .WithParameterList(
                             SyntaxFactory.ParameterList(
                                 SyntaxFactory.SingletonSeparatedList<ParameterSyntax>(
                                     SyntaxFactory.Parameter(
-                                        SyntaxFactory.Identifier(
-                                            ""args""))
+                                        SyntaxFactory.Identifier(""args""))
                                     .WithType(
                                         SyntaxFactory.ArrayType(
                                             SyntaxFactory.PredefinedType(
-                                                SyntaxFactory.Token(
-                                                    SyntaxKind.StringKeyword)))
+                                                SyntaxFactory.Token(SyntaxKind.StringKeyword)))
                                         .WithRankSpecifiers(
                                             SyntaxFactory.SingletonList<ArrayRankSpecifierSyntax>(
                                                 SyntaxFactory.ArrayRankSpecifier(
                                                     SyntaxFactory.SingletonSeparatedList<ExpressionSyntax>(
                                                         SyntaxFactory.OmittedArraySizeExpression()
                                                         .WithOmittedArraySizeExpressionToken(
-                                                            SyntaxFactory.Token(
-                                                                SyntaxKind.OmittedArraySizeExpressionToken))))
+                                                            SyntaxFactory.Token(SyntaxKind.OmittedArraySizeExpressionToken))))
                                                 .WithOpenBracketToken(
-                                                    SyntaxFactory.Token(
-                                                        SyntaxKind.OpenBracketToken))
+                                                    SyntaxFactory.Token(SyntaxKind.OpenBracketToken))
                                                 .WithCloseBracketToken(
-                                                    SyntaxFactory.Token(
-                                                        SyntaxKind.CloseBracketToken)))))))
+                                                    SyntaxFactory.Token(SyntaxKind.CloseBracketToken)))))))
                             .WithOpenParenToken(
-                                SyntaxFactory.Token(
-                                    SyntaxKind.OpenParenToken))
+                                SyntaxFactory.Token(SyntaxKind.OpenParenToken))
                             .WithCloseParenToken(
-                                SyntaxFactory.Token(
-                                    SyntaxKind.CloseParenToken)))
+                                SyntaxFactory.Token(SyntaxKind.CloseParenToken)))
                         .WithBody(
                             SyntaxFactory.Block(
                                 SyntaxFactory.SingletonList<StatementSyntax>(
@@ -237,13 +197,10 @@ namespace N
                                         SyntaxFactory.InvocationExpression(
                                             SyntaxFactory.MemberAccessExpression(
                                                 SyntaxKind.SimpleMemberAccessExpression,
-                                                SyntaxFactory.IdentifierName(
-                                                    ""Console""),
-                                                SyntaxFactory.IdentifierName(
-                                                    ""WriteLine""))
+                                                SyntaxFactory.IdentifierName(""Console""),
+                                                SyntaxFactory.IdentifierName(""WriteLine""))
                                             .WithOperatorToken(
-                                                SyntaxFactory.Token(
-                                                    SyntaxKind.DotToken)))
+                                                SyntaxFactory.Token(SyntaxKind.DotToken)))
                                         .WithArgumentList(
                                             SyntaxFactory.ArgumentList(
                                                 SyntaxFactory.SingletonSeparatedList<ArgumentSyntax>(
@@ -256,33 +213,25 @@ namespace N
                                                                 @""""""Hello World"""""",
                                                                 SyntaxFactory.TriviaList())))))
                                             .WithOpenParenToken(
-                                                SyntaxFactory.Token(
-                                                    SyntaxKind.OpenParenToken))
+                                                SyntaxFactory.Token(SyntaxKind.OpenParenToken))
                                             .WithCloseParenToken(
-                                                SyntaxFactory.Token(
-                                                    SyntaxKind.CloseParenToken))))
+                                                SyntaxFactory.Token(SyntaxKind.CloseParenToken))))
                                     .WithSemicolonToken(
                                         SyntaxFactory.Token(
                                             SyntaxFactory.TriviaList(),
                                             SyntaxKind.SemicolonToken,
                                             SyntaxFactory.TriviaList(
-                                                SyntaxFactory.Comment(
-                                                    ""// comment""))))))
+                                                SyntaxFactory.Comment(""// comment""))))))
                             .WithOpenBraceToken(
-                                SyntaxFactory.Token(
-                                    SyntaxKind.OpenBraceToken))
+                                SyntaxFactory.Token(SyntaxKind.OpenBraceToken))
                             .WithCloseBraceToken(
-                                SyntaxFactory.Token(
-                                    SyntaxKind.CloseBraceToken)))))
+                                SyntaxFactory.Token(SyntaxKind.CloseBraceToken)))))
                 .WithCloseBraceToken(
-                    SyntaxFactory.Token(
-                        SyntaxKind.CloseBraceToken))))
+                    SyntaxFactory.Token(SyntaxKind.CloseBraceToken))))
         .WithCloseBraceToken(
-            SyntaxFactory.Token(
-                SyntaxKind.CloseBraceToken))))
+            SyntaxFactory.Token(SyntaxKind.CloseBraceToken))))
 .WithEndOfFileToken(
-    SyntaxFactory.Token(
-        SyntaxKind.EndOfFileToken))
+    SyntaxFactory.Token(SyntaxKind.EndOfFileToken))
 .NormalizeWhitespace()", removeRedundantModifyingCalls: false);
     }
 

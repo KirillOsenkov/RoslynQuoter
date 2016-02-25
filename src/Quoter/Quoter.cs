@@ -542,6 +542,28 @@ public class Quoter
 
             ApiCall quotedCodeBlock = FindValue(parameterName, quotedValues);
 
+            // if we have Block(List<StatementSyntax>(new StatementSyntax[] { A, B })), just simplify it to
+            // Block(A, B)
+            if (quotedCodeBlock != null && factory.GetParameters().Length == 1 && factoryMethodParameter.GetCustomAttribute<ParamArrayAttribute>() != null)
+            {
+                var methodCall = quotedCodeBlock.FactoryMethodCall as MethodCall;
+                if (methodCall != null && methodCall.Name.Contains("List") && methodCall.Arguments.Count == 1)
+                {
+                    var argument = methodCall.Arguments[0] as ApiCall;
+                    var arrayCreation = argument.FactoryMethodCall as MethodCall;
+                    if (argument != null && arrayCreation != null && arrayCreation.Name.StartsWith("new ") && arrayCreation.Name.EndsWith("[]"))
+                    {
+                        foreach (var arrayElement in arrayCreation.Arguments)
+                        {
+                            factoryMethodCall.AddArgument(arrayElement);
+                        }
+
+                        quotedValues.Remove(quotedCodeBlock);
+                        return;
+                    }
+                }
+            }
+
             // special case to prefer SyntaxFactory.IdentifierName("C") to 
             // SyntaxFactory.IdentifierName(Syntax.Identifier("C"))
             if (parameterName == "name" && parameterType == typeof(string))
@@ -764,6 +786,13 @@ public class Quoter
 
         if (minParameterCount == 1 && candidatesWithMinParameterCount.Length > 1)
         {
+            // first see if we have a method that accepts params parameter and return that if found
+            var paramArray = candidatesWithMinParameterCount.FirstOrDefault(m => m.GetParameters()[0].GetCustomAttribute<ParamArrayAttribute>() != null);
+            if (paramArray != null)
+            {
+                return paramArray;
+            }
+
             // if there are multiple candidates with one parameter, pick the one that is optional
             var firstParameterOptional = candidatesWithMinParameterCount.FirstOrDefault(m => m.GetParameters()[0].IsOptional);
             if (firstParameterOptional != null)
@@ -935,7 +964,17 @@ public class Quoter
                 Print(openParen, sb, 0);
             }
 
-            PrintNewLine(sb);
+            bool needNewLine = true;
+
+            if (methodCall.Arguments.Count == 1 && (methodCall.Arguments[0] is string || methodCall.Arguments[0] is SyntaxKind))
+            {
+                needNewLine = false;
+            }
+
+            if (needNewLine)
+            {
+                PrintNewLine(sb);
+            }
 
             bool needComma = false;
             foreach (var block in methodCall.Arguments)
@@ -951,11 +990,11 @@ public class Quoter
                     Print(
                         (string)block,
                         sb,
-                        depth + 1);
+                        needNewLine ? depth + 1 : 0);
                 }
                 else if (block is SyntaxKind)
                 {
-                    Print("SyntaxKind." + ((SyntaxKind)block).ToString(), sb, depth + 1);
+                    Print("SyntaxKind." + ((SyntaxKind)block).ToString(), sb, needNewLine ? depth + 1 : 0);
                 }
                 else if (block is ApiCall)
                 {
@@ -995,7 +1034,10 @@ public class Quoter
 
     private static void PrintIndent(StringBuilder sb, int indent)
     {
-        sb.Append(new string(' ', indent * 4));
+        if (indent > 0)
+        {
+            sb.Append(new string(' ', indent * 4));
+        }
     }
 
     private static string ProperCase(string str)
