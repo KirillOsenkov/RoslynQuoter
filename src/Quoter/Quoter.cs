@@ -732,8 +732,9 @@ public class Quoter
     {
         var result = new Dictionary<string, List<MethodInfo>>();
 
-        var staticMethods = typeof(SyntaxFactory).GetMethods(
-            BindingFlags.Public | BindingFlags.Static);
+        var staticMethods = typeof(SyntaxFactory)
+            .GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .Where(m => m.GetCustomAttribute<ObsoleteAttribute>() == null);
 
         foreach (var method in staticMethods.OrderBy(m => m.ToString()))
         {
