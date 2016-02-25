@@ -256,6 +256,12 @@ namespace N
     }
 
     [TestMethod]
+    public void TestStringLiteralWithBackslash()
+    {
+        Test("class C { string s = \"a\\b\"");
+    }
+
+    [TestMethod]
     public void TestSimpleIntLiteral()
     {
         Test("class C { int i = 42; }");
@@ -302,7 +308,7 @@ class Program
     [TestMethod]
     public void Roundtrip4()
     {
-        Test("class C { string s = @\"\"\"\"; }");
+        Test("class C { string s = @\" zzz \"\" zzz \"; }");
     }
 
     [TestMethod]

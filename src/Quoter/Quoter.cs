@@ -341,7 +341,7 @@ public class Quoter
             trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
         }
 
-        if (value.Kind() == SyntaxKind.IdentifierToken)
+        if (value.Kind() == SyntaxKind.IdentifierToken && !value.IsMissing)
         {
             methodName = SyntaxFactory("Identifier");
             if (value.IsMissing)
@@ -362,9 +362,9 @@ public class Quoter
             arguments.Add(actualValue);
             AddIfNotNull(arguments, trailing);
         }
-        else if (value.Kind() == SyntaxKind.XmlTextLiteralToken ||
+        else if ((value.Kind() == SyntaxKind.XmlTextLiteralToken ||
             value.Kind() == SyntaxKind.XmlTextLiteralNewLineToken ||
-            value.Kind() == SyntaxKind.XmlEntityLiteralToken)
+            value.Kind() == SyntaxKind.XmlEntityLiteralToken) && !value.IsMissing)
         {
             methodName = SyntaxFactory("XmlTextLiteral");
             if (value.Kind() == SyntaxKind.XmlTextLiteralNewLineToken)
@@ -387,7 +387,8 @@ public class Quoter
             value.Kind() != SyntaxKind.TrueKeyword &&
             value.Kind() != SyntaxKind.FalseKeyword &&
             value.Kind() != SyntaxKind.NullKeyword &&
-            value.Kind() != SyntaxKind.ArgListKeyword)
+            value.Kind() != SyntaxKind.ArgListKeyword &&
+            !value.IsMissing)
         {
             methodName = SyntaxFactory("Literal");
             bool shouldAddTrivia = leading != null || trailing != null;
@@ -404,10 +405,27 @@ public class Quoter
                 quotedText = value.ValueText;
                 if (!string.IsNullOrEmpty(quotedText))
                 {
-                    quotedText = EscapeAndQuote(quotedText, verbatim);
+                    quotedText = Escape(quotedText, verbatim);
+                    if (value.Text.StartsWith("@"))
+                    {
+                        quotedText = Escape(quotedText, verbatim);
+                    }
                 }
 
-                quotedText = EscapeAndQuote(quotedText, value.Text.StartsWith("@"));
+                var escapedQuote = "\"";
+                var escapedBackslash = "\\";
+                var doubleEscapedQuote = verbatim ? escapedQuote + escapedQuote : escapedBackslash + escapedQuote;
+                quotedText = doubleEscapedQuote + quotedText + doubleEscapedQuote;
+                if (verbatim)
+                {
+                    quotedText = "@" + quotedText;
+                }
+
+                quotedText = escapedQuote + quotedText + escapedQuote;
+                if (verbatim)
+                {
+                    quotedText = "@" + quotedText;
+                }
             }
             else if (value.Kind() == SyntaxKind.CharacterLiteralToken)
             {
