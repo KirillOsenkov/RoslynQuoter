@@ -469,6 +469,12 @@ namespace @N
     }
 
     [TestMethod]
+    public void TestObsoleteAttribute()
+    {
+        Test("class C { int i => 0; }");
+    }
+
+    [TestMethod]
     public void RoundtripMissingToken()
     {
         Test("class");

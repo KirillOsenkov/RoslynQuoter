@@ -161,6 +161,7 @@ public class Quoter
         // Filter out non-essential properties listed in nonStructuralProperties
         result.AddRange(properties
             .Where(propertyInfo => !nonStructuralProperties.Contains(propertyInfo.Name))
+            .Where(p => p.GetCustomAttribute<ObsoleteAttribute>() == null)
             .Select(propertyInfo => QuotePropertyValue(node, propertyInfo))
             .Where(apiCall => apiCall != null));
 
@@ -878,7 +879,9 @@ public class Quoter
     /// </summary>
     private void AddModifyingCalls(object treeElement, ApiCall apiCall, List<ApiCall> values)
     {
-        var methods = treeElement.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance);
+        var methods = treeElement.GetType()
+            .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+            .Where(m => m.GetCustomAttribute<ObsoleteAttribute>() == null);
 
         foreach (var value in values)
         {
