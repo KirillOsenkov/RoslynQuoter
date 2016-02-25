@@ -224,7 +224,9 @@ public class Quoter
 
         if (value is string)
         {
-            return new ApiCall(property.Name, EscapeAndQuote(value.ToString()));
+            var text = value.ToString();
+            var verbatim = text.Contains("\r") || text.Contains("\n");
+            return new ApiCall(property.Name, EscapeAndQuote(value.ToString(), verbatim));
         }
 
         if (value is bool)
@@ -324,7 +326,11 @@ public class Quoter
 
         var arguments = new List<object>();
         string methodName = SyntaxFactory("Token");
-        string escapedTokenValueText = EscapeAndQuote(value.ToString());
+        bool verbatim = 
+            value.Text.StartsWith("@") ||
+            value.Text.Contains("\r") ||
+            value.Text.Contains("\n");
+        string escapedTokenValueText = EscapeAndQuote(value.ToString(), verbatim);
         object leading = GetLeadingTrivia(value);
         object actualValue;
         object trailing = GetTrailingTrivia(value);
@@ -390,18 +396,38 @@ public class Quoter
                 arguments.Add(leading ?? GetEmptyTrivia("LeadingTrivia"));
             }
 
-            string escapedValue = value.ToString();
+            string text = null;
+            string quotedText = null;
             if (value.Kind() == SyntaxKind.StringLiteralToken)
             {
-                escapedValue = escapedTokenValueText;
-            }
+                text = EscapeAndQuote(value.ValueText, verbatim);
+                quotedText = value.ValueText;
+                if (!string.IsNullOrEmpty(quotedText))
+                {
+                    quotedText = EscapeAndQuote(quotedText, verbatim);
+                }
 
-            if (shouldAddTrivia || (escapedValue != escapedTokenValueText && ("\"" + escapedValue + "\"" != escapedTokenValueText)))
+                quotedText = EscapeAndQuote(quotedText, value.Text.StartsWith("@"));
+            }
+            else if (value.Kind() == SyntaxKind.CharacterLiteralToken)
             {
-                arguments.Add(escapedTokenValueText);
+                text = EscapeAndQuote(value.ValueText, verbatim, "'");
+                quotedText = EscapeAndQuote(text, verbatim);
+            }
+            else
+            {
+                text = value.ValueText;
+                quotedText = EscapeAndQuote(text, verbatim);
             }
 
-            arguments.Add(escapedValue);
+            if (shouldAddTrivia ||
+                (value.Kind() == SyntaxKind.StringLiteralToken &&
+                value.ToString() != Microsoft.CodeAnalysis.CSharp.SyntaxFactory.Literal(value.ValueText).ToString()))
+            {
+                arguments.Add(quotedText);
+            }
+
+            arguments.Add(text);
 
             if (shouldAddTrivia)
             {
@@ -533,7 +559,9 @@ public class Quoter
             factoryMethodName = SyntaxFactory("DocumentationCommentExterior");
         }
 
-        object argument = EscapeAndQuote(syntaxTrivia.ToString());
+        var t = syntaxTrivia.ToString();
+        var verbatim = t.Contains("\r") || t.Contains("\n");
+        object argument = EscapeAndQuote(t, verbatim: verbatim);
 
         if (syntaxTrivia.HasStructure)
         {
@@ -647,7 +675,7 @@ public class Quoter
     /// <summary>
     /// Escapes strings to be included within "" using C# escaping rules
     /// </summary>
-    public static string Escape(string text, bool escapeVerbatim = true)
+    public static string Escape(string text, bool escapeVerbatim = false)
     {
         var sb = new StringBuilder();
         for (int i = 0; i < text.Length; i++)
@@ -675,16 +703,21 @@ public class Quoter
         return sb.ToString();
     }
 
-    public static string EscapeAndQuote(string text)
+    public static string EscapeAndQuote(string text, bool verbatim, string quoteChar = "\"")
     {
-        bool needsEscapeCharacter = text.Contains("\"") || text.Contains("\\") || text.Contains("\r") || text.Contains("\n");
-        text = Escape(text);
-        text = "\"" + text + "\"";
-        if (needsEscapeCharacter)
+        text = Escape(text, verbatim);
+        text = SurroundWithQuotes(text, quoteChar);
+        if (verbatim)
         {
             text = "@" + text;
         }
 
+        return text;
+    }
+
+    private static string SurroundWithQuotes(string text, string quoteChar = "\"")
+    {
+        text = quoteChar + text + quoteChar;
         return text;
     }
 

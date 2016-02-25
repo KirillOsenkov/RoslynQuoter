@@ -119,6 +119,12 @@ public class Tests
         Test(@"class C { void M() { } }");
     }
 
+    //[TestMethod]
+    public void TestInterpolatedString()
+    {
+        Test(@"class C { void M() { string s = $""a""; } }");
+    }
+
     [TestMethod]
     public void TestHelloWorld()
     {
@@ -207,7 +213,7 @@ namespace N
                                                     SyntaxFactory.Argument(
                                                         SyntaxFactory.LiteralExpression(
                                                             SyntaxKind.StringLiteralExpression,
-                                                            SyntaxFactory.Literal(@""""""Hello World"""""")))))
+                                                            SyntaxFactory.Literal(""Hello World"")))))
                                             .WithOpenParenToken(
                                                 SyntaxFactory.Token(SyntaxKind.OpenParenToken))
                                             .WithCloseParenToken(
@@ -232,9 +238,45 @@ namespace N
     }
 
     [TestMethod]
+    public void TestComment()
+    {
+        Test(@"class C
+{
+  void M()
+  {
+    A(""M""); // comment
+  }
+}");
+    }
+
+    [TestMethod]
+    public void TestSimpleStringLiteral()
+    {
+        Test("class C { string s = \"z\"; }"); // "z"
+    }
+
+    [TestMethod]
+    public void TestSimpleIntLiteral()
+    {
+        Test("class C { int i = 42; }");
+    }
+
+    [TestMethod]
+    public void TestSimpleCharLiteral()
+    {
+        Test("class C { char c = 'z'; }");
+    }
+
+    [TestMethod]
+    public void TestTrueFalseAndNull()
+    {
+        Test("class C { var x = true ? false : null; }");
+    }
+
+    [TestMethod]
     public void Roundtrip1()
     {
-        Test("class C { string s = \"\\\"\"; }");
+        Test("class C { string s = \"\\\"\"; }"); // "\""
     }
 
     [TestMethod]
@@ -427,9 +469,9 @@ namespace @N
     }
 
     private void Test(
-        string sourceText, 
-        string expected, 
-        bool useDefaultFormatting = true, 
+        string sourceText,
+        string expected,
+        bool useDefaultFormatting = true,
         bool removeRedundantModifyingCalls = true,
         bool shortenCodeWithUsingStatic = false)
     {
@@ -462,26 +504,23 @@ namespace @N
                 .ToFullString();
         }
 
-        var quoter = new Quoter 
-        { 
+        var quoter = new Quoter
+        {
             UseDefaultFormatting = useDefaultFormatting,
             RemoveRedundantModifyingCalls = removeRedundantCalls
         };
         var generatedCode = quoter.Quote(sourceText);
 
-        ////var evaluator = new Evaluator();
-        ////var generatedNode = evaluator.Evaluate(generatedCode) as CompilationUnitSyntax;
+        var resultText = quoter.Evaluate(generatedCode);
 
-        ////var resultText = generatedNode.ToFullString();
+        if (sourceText != resultText)
+        {
+            //File.WriteAllText(@"D:\1.txt", sourceText);
+            //File.WriteAllText(@"D:\2.txt", resultText);
+            //File.WriteAllText(@"D:\3.txt", generatedCode);
+        }
 
-        ////if (sourceText != resultText)
-        ////{
-        ////    File.WriteAllText(@"E:\1.txt", sourceText);
-        ////    File.WriteAllText(@"E:\2.txt", resultText);
-        ////    File.WriteAllText(@"E:\3.txt", generatedCode);
-        ////}
-
-        ////Assert.AreEqual(sourceText, resultText);
+        Assert.AreEqual(sourceText, resultText);
     }
 
     public void CheckSourceFiles()
