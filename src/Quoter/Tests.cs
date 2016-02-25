@@ -104,6 +104,31 @@ public class Tests
     }
 
     [TestMethod]
+    public void TestMissingTokenWithUsingStatic()
+    {
+        Test("class", @"CompilationUnit()
+.WithMembers(
+    SingletonList<MemberDeclarationSyntax>(
+        ClassDeclaration(
+            MissingToken(
+                SyntaxKind.IdentifierToken))
+        .WithKeyword(
+            Token(
+                SyntaxKind.ClassKeyword))
+        .WithOpenBraceToken(
+            MissingToken(
+                SyntaxKind.OpenBraceToken))
+        .WithCloseBraceToken(
+            MissingToken(
+                SyntaxKind.CloseBraceToken))))
+.WithEndOfFileToken(
+    Token(
+        SyntaxKind.EndOfFileToken))
+.NormalizeWhitespace()", removeRedundantModifyingCalls: false, shortenCodeWithUsingStatic: true);
+    }
+
+
+    [TestMethod]
     public void TestGlobal()
     {
         Test(@"class C { void M() { global::System.String s; } }");

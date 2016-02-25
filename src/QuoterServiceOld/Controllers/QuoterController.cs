@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Web;
 using System.Web.Http;
 
 namespace QuoterService.Controllers
@@ -46,6 +47,8 @@ namespace QuoterService.Controllers
                     responseText = ex.ToString();
                 }
             }
+
+            responseText = HttpUtility.HtmlEncode(responseText);
 
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             response.Content = new StringContent(responseText, Encoding.UTF8, "text/html");
