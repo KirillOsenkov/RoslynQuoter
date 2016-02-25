@@ -17,7 +17,7 @@ public class Tests
     SyntaxFactory.SingletonList<UsingDirectiveSyntax>(
         SyntaxFactory.UsingDirective(
             SyntaxFactory.IdentifierName(
-                @""System""))
+                ""System""))
         .WithUsingKeyword(
             SyntaxFactory.Token(
                 SyntaxKind.UsingKeyword))
@@ -39,7 +39,7 @@ public class Tests
     SingletonList<UsingDirectiveSyntax>(
         UsingDirective(
             IdentifierName(
-                @""System""))))
+                ""System""))))
 .NormalizeWhitespace()", shortenCodeWithUsingStatic: true);
     }
 
@@ -52,7 +52,7 @@ public class Tests
     SyntaxFactory.SingletonList<UsingDirectiveSyntax>(
         SyntaxFactory.UsingDirective(
             SyntaxFactory.IdentifierName(
-                @""System""))))
+                ""System""))))
 .NormalizeWhitespace()");
     }
 
@@ -63,7 +63,7 @@ public class Tests
 .WithMembers(
     SyntaxFactory.SingletonList<MemberDeclarationSyntax>(
         SyntaxFactory.ClassDeclaration(
-            @""C"")
+            ""C"")
         .WithKeyword(
             SyntaxFactory.Token(
                 SyntaxKind.ClassKeyword))
@@ -134,7 +134,7 @@ namespace N
     SyntaxFactory.SingletonList<UsingDirectiveSyntax>(
         SyntaxFactory.UsingDirective(
             SyntaxFactory.IdentifierName(
-                @""System""))
+                ""System""))
         .WithUsingKeyword(
             SyntaxFactory.Token(
                 SyntaxKind.UsingKeyword))
@@ -145,7 +145,7 @@ namespace N
     SyntaxFactory.SingletonList<MemberDeclarationSyntax>(
         SyntaxFactory.NamespaceDeclaration(
             SyntaxFactory.IdentifierName(
-                @""N""))
+                ""N""))
         .WithNamespaceKeyword(
             SyntaxFactory.Token(
                 SyntaxKind.NamespaceKeyword))
@@ -155,7 +155,7 @@ namespace N
         .WithMembers(
             SyntaxFactory.SingletonList<MemberDeclarationSyntax>(
                 SyntaxFactory.ClassDeclaration(
-                    @""Program"")
+                    ""Program"")
                 .WithKeyword(
                     SyntaxFactory.Token(
                         SyntaxKind.ClassKeyword))
@@ -169,7 +169,7 @@ namespace N
                                 SyntaxFactory.Token(
                                     SyntaxKind.VoidKeyword)),
                             SyntaxFactory.Identifier(
-                                @""Main""))
+                                ""Main""))
                         .WithModifiers(
                             SyntaxFactory.TokenList(
                                 SyntaxFactory.Token(
@@ -179,7 +179,7 @@ namespace N
                                 SyntaxFactory.SingletonSeparatedList<ParameterSyntax>(
                                     SyntaxFactory.Parameter(
                                         SyntaxFactory.Identifier(
-                                            @""args""))
+                                            ""args""))
                                     .WithType(
                                         SyntaxFactory.ArrayType(
                                             SyntaxFactory.PredefinedType(
@@ -213,9 +213,9 @@ namespace N
                                             SyntaxFactory.MemberAccessExpression(
                                                 SyntaxKind.SimpleMemberAccessExpression,
                                                 SyntaxFactory.IdentifierName(
-                                                    @""Console""),
+                                                    ""Console""),
                                                 SyntaxFactory.IdentifierName(
-                                                    @""WriteLine""))
+                                                    ""WriteLine""))
                                             .WithOperatorToken(
                                                 SyntaxFactory.Token(
                                                     SyntaxKind.DotToken)))
@@ -242,7 +242,7 @@ namespace N
                                             SyntaxKind.SemicolonToken,
                                             SyntaxFactory.TriviaList(
                                                 SyntaxFactory.Comment(
-                                                    @""// comment""))))))
+                                                    ""// comment""))))))
                             .WithOpenBraceToken(
                                 SyntaxFactory.Token(
                                     SyntaxKind.OpenBraceToken))
