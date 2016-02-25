@@ -31,11 +31,11 @@
         </div>
     </div>
     <div id="outputDiv" xml:space="preserve">
-SyntaxFactory.CompilationUnit()
+CompilationUnit()
 .WithMembers(
-    SyntaxFactory.SingletonList(
-        SyntaxFactory.ClassDeclaration(
-            @"C")))
+    SingletonList&lt;MemberDeclarationSyntax&gt;(
+        ClassDeclaration(
+            "C")))
 .NormalizeWhitespace()
     </div>
 </body>
