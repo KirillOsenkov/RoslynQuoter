@@ -486,6 +486,15 @@ namespace @N
         Test("class");
     }
 
+    [TestMethod]
+    public void TestXmlDocComment()
+    {
+        Test(@"    /// <summary>
+    /// test
+    /// </summary>
+class C { }");
+    }
+
     private void Test(
         string sourceText,
         string expected,

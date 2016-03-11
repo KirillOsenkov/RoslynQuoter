@@ -45,6 +45,7 @@ public class Quoter
     private readonly ScriptOptions options = ScriptOptions.Default
         .AddReferences(typeof(SyntaxNode).Assembly, typeof(CSharpSyntaxNode).Assembly)
         .AddImports(
+            "System",
             "Microsoft.CodeAnalysis",
             "Microsoft.CodeAnalysis.CSharp",
             "Microsoft.CodeAnalysis.CSharp.Syntax",
@@ -227,7 +228,7 @@ public class Quoter
         {
             var text = value.ToString();
             var verbatim = text.Contains("\r") || text.Contains("\n");
-            return new ApiCall(property.Name, EscapeAndQuote(value.ToString(), verbatim));
+            return new ApiCall(property.Name, EscapeAndQuote(text, verbatim));
         }
 
         if (value is bool)
@@ -734,6 +735,16 @@ public class Quoter
 
     public static string EscapeAndQuote(string text, bool verbatim, string quoteChar = "\"")
     {
+        if (text == Environment.NewLine)
+        {
+            return "Environment.NewLine";
+        }
+
+        if (text == "\n")
+        {
+            return "\"\\n\"";
+        }
+
         text = Escape(text, verbatim);
         text = SurroundWithQuotes(text, quoteChar);
         if (verbatim)
