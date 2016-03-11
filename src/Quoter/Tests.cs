@@ -434,7 +434,7 @@ int i
         Test("#pragma checksum \"..\\..\"");
     }
 
-    // [TestMethod]
+    [TestMethod]
     [WorkItem(15194)]
     public void Roundtrip23()
     {
