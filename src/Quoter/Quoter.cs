@@ -374,6 +374,16 @@ public class Quoter
             arguments.Add(actualValue);
             AddIfNotNull(arguments, trailing);
         }
+        else if (value.Kind() == SyntaxKind.InterpolatedStringTextToken && !value.IsMissing)
+        {
+            leading = leading ?? GetEmptyTrivia("LeadingTrivia");
+            trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
+            AddIfNotNull(arguments, leading);
+            arguments.Add(value.Kind());
+            arguments.Add(escapedTokenValueText);
+            arguments.Add(escapedTokenValueText);
+            AddIfNotNull(arguments, trailing);
+        }
         else if ((value.Kind() == SyntaxKind.XmlTextLiteralToken ||
             value.Kind() == SyntaxKind.XmlTextLiteralNewLineToken ||
             value.Kind() == SyntaxKind.XmlEntityLiteralToken) && !value.IsMissing)

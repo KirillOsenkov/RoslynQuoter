@@ -119,10 +119,10 @@ public class Tests
         Test(@"class C { void M() { } }");
     }
 
-    //[TestMethod]
+    [TestMethod]
     public void TestInterpolatedString()
     {
-        Test(@"class C { void M() { string s = $""a""; } }");
+        Test(@"class C { string s = $""a""; }");
     }
 
     [TestMethod]
