@@ -126,6 +126,12 @@ public class Tests
     }
 
     [TestMethod]
+    public void TestAttribute()
+    {
+        Test(@"[Foo]class C { }");
+    }
+
+    [TestMethod]
     public void TestHelloWorld()
     {
         Test(@"using System;

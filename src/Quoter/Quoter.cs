@@ -292,14 +292,24 @@ public class Quoter
         }
         else if (elements.Count == 1)
         {
-            if (methodName.StartsWith("List") || methodName.StartsWith(SyntaxFactory("List")))
+            if (methodName.StartsWith("List"))
             {
-                methodName = methodName.Replace("List", "SingletonList");
+                methodName = "SingletonList" + methodName.Substring("List".Length);
             }
 
-            if (methodName.StartsWith("SeparatedList") || methodName.StartsWith(SyntaxFactory("SeparatedList")))
+            if (methodName.StartsWith(SyntaxFactory("List")))
             {
-                methodName = methodName.Replace("SeparatedList", "SingletonSeparatedList");
+                methodName = SyntaxFactory("SingletonList") + methodName.Substring(SyntaxFactory("List").Length);
+            }
+
+            if (methodName.StartsWith("SeparatedList"))
+            {
+                methodName = "SingletonSeparatedList" + methodName.Substring("SeparatedList".Length);
+            }
+
+            if (methodName.StartsWith(SyntaxFactory("SeparatedList")))
+            {
+                methodName = SyntaxFactory("SingletonSeparatedList") + methodName.Substring(SyntaxFactory("SeparatedList").Length);
             }
         }
         else
@@ -327,7 +337,7 @@ public class Quoter
 
         var arguments = new List<object>();
         string methodName = SyntaxFactory("Token");
-        bool verbatim = 
+        bool verbatim =
             value.Text.StartsWith("@") ||
             value.Text.Contains("\r") ||
             value.Text.Contains("\n");
