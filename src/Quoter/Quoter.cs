@@ -1053,7 +1053,15 @@ public class Quoter
                 return;
             }
 
-            if (openParenthesisOnNewLine)
+            bool needNewLine = true;
+
+            if (methodCall.Arguments.Count == 1 &&
+                (methodCall.Arguments[0] is string || methodCall.Arguments[0] is SyntaxKind))
+            {
+                needNewLine = false;
+            }
+
+            if (openParenthesisOnNewLine && needNewLine)
             {
                 PrintNewLine(sb);
                 Print(openParen, sb, depth);
@@ -1061,13 +1069,6 @@ public class Quoter
             else
             {
                 Print(openParen, sb, 0);
-            }
-
-            bool needNewLine = true;
-
-            if (methodCall.Arguments.Count == 1 && (methodCall.Arguments[0] is string || methodCall.Arguments[0] is SyntaxKind))
-            {
-                needNewLine = false;
             }
 
             if (needNewLine)
@@ -1108,7 +1109,7 @@ public class Quoter
                 needComma = true;
             }
 
-            if (closingParenthesisOnNewLine)
+            if (closingParenthesisOnNewLine && needNewLine)
             {
                 PrintNewLine(sb);
                 Print(closeParen, sb, depth);
