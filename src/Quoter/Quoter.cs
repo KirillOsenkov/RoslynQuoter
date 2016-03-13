@@ -419,55 +419,26 @@ public class Quoter
                 arguments.Add(leading ?? GetEmptyTrivia("LeadingTrivia"));
             }
 
-            string text = null;
-            string quotedText = null;
-            if (value.Kind() == SyntaxKind.StringLiteralToken)
-            {
-                text = EscapeAndQuote(value.ValueText, verbatim);
-                quotedText = value.ValueText;
-                if (!string.IsNullOrEmpty(quotedText))
-                {
-                    quotedText = Escape(quotedText, verbatim);
-                    if (value.Text.StartsWith("@"))
-                    {
-                        quotedText = Escape(quotedText, verbatim);
-                    }
-                }
+            string escapedText = EscapeAndQuote(value.Text);
+            string escapedValue = EscapeAndQuote(value.ValueText);
 
-                var escapedQuote = "\"";
-                var escapedBackslash = "\\";
-                var doubleEscapedQuote = verbatim ? escapedQuote + escapedQuote : escapedBackslash + escapedQuote;
-                quotedText = doubleEscapedQuote + quotedText + doubleEscapedQuote;
-                if (verbatim)
-                {
-                    quotedText = "@" + quotedText;
-                }
-
-                quotedText = escapedQuote + quotedText + escapedQuote;
-                if (verbatim)
-                {
-                    quotedText = "@" + quotedText;
-                }
-            }
-            else if (value.Kind() == SyntaxKind.CharacterLiteralToken)
+            if (value.Kind() == SyntaxKind.CharacterLiteralToken)
             {
-                text = EscapeAndQuote(value.ValueText, verbatim, "'");
-                quotedText = EscapeAndQuote(text, verbatim);
+                escapedValue = EscapeAndQuote(value.ValueText, "'");
             }
-            else
+            else if (value.Kind() != SyntaxKind.StringLiteralToken)
             {
-                text = value.ValueText;
-                quotedText = EscapeAndQuote(text, verbatim);
+                escapedValue = value.ValueText;
             }
 
             if (shouldAddTrivia ||
                 (value.Kind() == SyntaxKind.StringLiteralToken &&
                 value.ToString() != Microsoft.CodeAnalysis.CSharp.SyntaxFactory.Literal(value.ValueText).ToString()))
             {
-                arguments.Add(quotedText);
+                arguments.Add(escapedText);
             }
 
-            arguments.Add(text);
+            arguments.Add(escapedValue);
 
             if (shouldAddTrivia)
             {
@@ -741,6 +712,12 @@ public class Quoter
         }
 
         return sb.ToString();
+    }
+
+    public static string EscapeAndQuote(string text, string quoteChar = "\"")
+    {
+        bool verbatim = text.Contains("\n") || text.Contains("\r");
+        return EscapeAndQuote(text, verbatim, quoteChar);
     }
 
     public static string EscapeAndQuote(string text, bool verbatim, string quoteChar = "\"")

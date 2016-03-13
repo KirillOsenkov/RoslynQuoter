@@ -475,9 +475,39 @@ namespace @N
     }
 
     [TestMethod]
+    public void Roundtrip28()
+    {
+        Test(@"[module: System.Copyright(""\n\t\u0123(C) \""2009"" + ""\u0123"")]");
+    }
+
+    [TestMethod]
     public void TestObsoleteAttribute()
     {
         Test("class C { int i => 0; }");
+    }
+
+    [TestMethod]
+    public void TestNewlineInConstant()
+    {
+        Test(@"[module: System.Copyright(""\n"")]");
+    }
+
+    [TestMethod]
+    public void TestQuoteInLiteral()
+    {
+        Test(@"[module: A(""\"""")]");
+    }
+
+    [TestMethod]
+    public void TestQuoteInVerbatimLiteral()
+    {
+        Test(@"[module: A(@"""""""")]");
+    }
+
+    [TestMethod]
+    public void TestBackslashInLiteral()
+    {
+        Test(@"[module: A(""\\"")]");
     }
 
     [TestMethod]
@@ -552,7 +582,7 @@ class C { }");
 
     public void CheckSourceFiles()
     {
-        var rootFolder = @"E:\Roslyn\Main";
+        var rootFolder = @"C:\roslyn-internal\Closed\Test\Files\";
         var files = Directory.GetFiles(rootFolder, "*.cs", SearchOption.AllDirectories);
         for (int i = 0; i < files.Length; i++)
         {
@@ -581,6 +611,6 @@ class C { }");
 
     private static void Log(string text)
     {
-        File.AppendAllText(@"E:\Failed.txt", text + Environment.NewLine);
+        File.AppendAllText(@"Failed.txt", text + Environment.NewLine);
     }
 }
