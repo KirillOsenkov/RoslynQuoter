@@ -481,6 +481,12 @@ namespace @N
     }
 
     [TestMethod]
+    public void SwitchCase()
+    {
+        Test(@"class C { public C() { switch(0) { case 1: break; default: break;} } } ");
+    }
+
+    [TestMethod]
     public void TestObsoleteAttribute()
     {
         Test("class C { int i => 0; }");
