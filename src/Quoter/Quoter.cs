@@ -184,7 +184,6 @@ public class Quoter
             node is PostfixUnaryExpressionSyntax ||
             node is PrefixUnaryExpressionSyntax ||
             node is DocumentationCommentTriviaSyntax ||
-            node is SwitchLabelSyntax ||
             node is YieldStatementSyntax)
         {
             result.Add(new ApiCall("Kind", "SyntaxKind." + node.Kind().ToString()));
@@ -901,7 +900,7 @@ public class Quoter
             }
             else
             {
-                throw new NotSupportedException();
+                throw new NotSupportedException("Sorry, this is a bug in Quoter. Please file a bug at https://github.com/KirillOsenkov/RoslynQuoter/issues/new.");
             }
 
             var methodCall = new MethodCall
