@@ -2,12 +2,15 @@
 }
 
 function onSubmitClick() {
+    var nodeKind = document.getElementById("nodeKind").value;
     var openCurlyOnNewLine = getCheckboxValue("openCurlyOnNewLine");
     var closeCurlyOnNewLine = getCheckboxValue("closeCurlyOnNewLine");
     var preserveOriginalWhitespace = getCheckboxValue("preserveOriginalWhitespace");
     var keepRedundantApiCalls = getCheckboxValue("keepRedundantApiCalls");
     var avoidUsingStatic = getCheckboxValue("avoidUsingStatic");
     var query = "api/quoter/?sourceText=" + encodeURIComponent(inputBox.value);
+
+    query = query + "&nodeKind=" + nodeKind;
 
     if (openCurlyOnNewLine) {
         query = query + "&openCurlyOnNewLine=true";

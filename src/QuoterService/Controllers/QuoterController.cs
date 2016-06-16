@@ -12,6 +12,7 @@ namespace QuoterService.Controllers
         [HttpGet]
         public string Get(
             string sourceText,
+            NodeKind nodeKind = NodeKind.CompilationUnit,
             bool openCurlyOnNewLine = false,
             bool closeCurlyOnNewLine = false,
             bool preserveOriginalWhitespace = false,
@@ -40,7 +41,7 @@ namespace QuoterService.Controllers
                         ShortenCodeWithUsingStatic = !avoidUsingStatic
                     };
 
-                    responseText = quoter.Quote(sourceText);
+                    responseText = quoter.Quote(sourceText, nodeKind);
                 }
                 catch (Exception ex)
                 {

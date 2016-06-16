@@ -66,15 +66,48 @@ public class Quoter
     /// the syntax tree for the source program.</returns>
     public string Quote(string sourceText)
     {
-        var sourceTree = CSharpSyntaxTree.ParseText(sourceText);
-        return Quote(sourceTree.GetRoot());
+        return Quote(sourceText, NodeKind.CompilationUnit);
+    }
+
+    /// <summary>
+    /// Given the input C# code <paramref name="sourceText"/> returns the C# source code of
+    /// Roslyn API calls that recreate the syntax tree for the input code.
+    /// </summary>
+    /// <param name="sourceText">A C# souce text</param>
+    /// <param name="nodeKind">What kind of C# syntax node should the input be parsed as</param>
+    /// <returns>A C# expression that describes calls to the Roslyn syntax API necessary to recreate
+    /// the syntax tree for the source text.</returns>
+    public string Quote(string sourceText, NodeKind nodeKind)
+    {
+        return Quote(Parse(sourceText, nodeKind));
+    }
+
+    /// <summary>
+    /// Given the input C# code <paramref name="sourceText"/> returns
+    /// the syntax tree for the input code.
+    /// </summary>
+    /// <param name="sourceText">A C# souce text</param>
+    /// <param name="nodeKind">What kind of C# syntax node should the input be parsed as</param>
+    private static SyntaxNode Parse(string sourceText, NodeKind nodeKind)
+    {
+        switch (nodeKind)
+        {
+            case NodeKind.CompilationUnit:
+                return SyntaxFactory.ParseCompilationUnit(sourceText);
+            case NodeKind.Statement:
+                return SyntaxFactory.ParseStatement(sourceText);
+            case NodeKind.Expression:
+                return SyntaxFactory.ParseExpression(sourceText);
+            default:
+                throw new InvalidOperationException();
+        }
     }
 
     /// <summary>
     /// Given the input C# syntax node <paramref name="node"/> returns the C# source code of
     /// Roslyn API calls that recreate the syntax node.
     /// </summary>
-    /// <param name="sourceText">A C# syntax node</param>
+    /// <param name="node">A C# syntax node</param>
     /// <returns>A C# expression that describes calls to the Roslyn syntax API necessary to recreate
     /// the input syntax node.</returns>
     internal string Quote(SyntaxNode node)
@@ -238,7 +271,7 @@ public class Quoter
         return null;
     }
 
-    private string SyntaxFactory(string text)
+    private string SyntaxFactoryMethod(string text)
     {
         if (!ShortenCodeWithUsingStatic)
         {
@@ -252,7 +285,7 @@ public class Quoter
     {
         IEnumerable<object> sourceList = syntaxList.Cast<object>();
 
-        string methodName = SyntaxFactory("List");
+        string methodName = SyntaxFactoryMethod("List");
         string listType = null;
         var propertyType = syntaxList.GetType();
         if (propertyType.IsGenericType)
@@ -263,7 +296,7 @@ public class Quoter
             if (propertyType.GetGenericTypeDefinition() == typeof(SeparatedSyntaxList<>))
             {
                 listType = "SyntaxNodeOrToken";
-                methodName = SyntaxFactory("SeparatedList");
+                methodName = SyntaxFactoryMethod("SeparatedList");
                 sourceList = ((SyntaxNodeOrTokenList)
                     syntaxList.GetType().GetMethod("GetWithSeparators").Invoke(syntaxList, null))
                     .Cast<object>()
@@ -275,12 +308,12 @@ public class Quoter
 
         if (propertyType.Name == "SyntaxTokenList")
         {
-            methodName = SyntaxFactory("TokenList");
+            methodName = SyntaxFactoryMethod("TokenList");
         }
 
         if (propertyType.Name == "SyntaxTriviaList")
         {
-            methodName = SyntaxFactory("TriviaList");
+            methodName = SyntaxFactoryMethod("TriviaList");
         }
 
         var elements = new List<object>(sourceList
@@ -297,9 +330,9 @@ public class Quoter
                 methodName = "SingletonList" + methodName.Substring("List".Length);
             }
 
-            if (methodName.StartsWith(SyntaxFactory("List")))
+            if (methodName.StartsWith(SyntaxFactoryMethod("List")))
             {
-                methodName = SyntaxFactory("SingletonList") + methodName.Substring(SyntaxFactory("List").Length);
+                methodName = SyntaxFactoryMethod("SingletonList") + methodName.Substring(SyntaxFactoryMethod("List").Length);
             }
 
             if (methodName.StartsWith("SeparatedList"))
@@ -307,9 +340,9 @@ public class Quoter
                 methodName = "SingletonSeparatedList" + methodName.Substring("SeparatedList".Length);
             }
 
-            if (methodName.StartsWith(SyntaxFactory("SeparatedList")))
+            if (methodName.StartsWith(SyntaxFactoryMethod("SeparatedList")))
             {
-                methodName = SyntaxFactory("SingletonSeparatedList") + methodName.Substring(SyntaxFactory("SeparatedList").Length);
+                methodName = SyntaxFactoryMethod("SingletonSeparatedList") + methodName.Substring(SyntaxFactoryMethod("SeparatedList").Length);
             }
         }
         else
@@ -336,7 +369,7 @@ public class Quoter
         }
 
         var arguments = new List<object>();
-        string methodName = SyntaxFactory("Token");
+        string methodName = SyntaxFactoryMethod("Token");
         bool verbatim =
             value.Text.StartsWith("@") ||
             value.Text.Contains("\r") ||
@@ -354,10 +387,10 @@ public class Quoter
 
         if (value.Kind() == SyntaxKind.IdentifierToken && !value.IsMissing)
         {
-            methodName = SyntaxFactory("Identifier");
+            methodName = SyntaxFactoryMethod("Identifier");
             if (value.IsMissing)
             {
-                methodName = SyntaxFactory("MissingToken");
+                methodName = SyntaxFactoryMethod("MissingToken");
             }
 
             if (value.IsMissing)
@@ -387,14 +420,14 @@ public class Quoter
             value.Kind() == SyntaxKind.XmlTextLiteralNewLineToken ||
             value.Kind() == SyntaxKind.XmlEntityLiteralToken) && !value.IsMissing)
         {
-            methodName = SyntaxFactory("XmlTextLiteral");
+            methodName = SyntaxFactoryMethod("XmlTextLiteral");
             if (value.Kind() == SyntaxKind.XmlTextLiteralNewLineToken)
             {
-                methodName = SyntaxFactory("XmlTextNewLine");
+                methodName = SyntaxFactoryMethod("XmlTextNewLine");
             }
             else if (value.Kind() == SyntaxKind.XmlEntityLiteralToken)
             {
-                methodName = SyntaxFactory("XmlEntity");
+                methodName = SyntaxFactoryMethod("XmlEntity");
             }
 
             arguments.Add(leading ?? GetEmptyTrivia("LeadingTrivia"));
@@ -411,7 +444,7 @@ public class Quoter
             value.Kind() != SyntaxKind.ArgListKeyword &&
             !value.IsMissing)
         {
-            methodName = SyntaxFactory("Literal");
+            methodName = SyntaxFactoryMethod("Literal");
             bool shouldAddTrivia = leading != null || trailing != null;
             if (shouldAddTrivia)
             {
@@ -448,12 +481,12 @@ public class Quoter
         {
             if (value.IsMissing)
             {
-                methodName = SyntaxFactory("MissingToken");
+                methodName = SyntaxFactoryMethod("MissingToken");
             }
 
             if (value.Kind() == SyntaxKind.BadToken)
             {
-                methodName = SyntaxFactory("BadToken");
+                methodName = SyntaxFactoryMethod("BadToken");
                 leading = leading ?? GetEmptyTrivia("LeadingTrivia");
                 trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
             }
@@ -511,12 +544,12 @@ public class Quoter
 
     private object GetEmptyTrivia(string parentPropertyName)
     {
-        return new ApiCall(parentPropertyName, SyntaxFactory("TriviaList"), arguments: null);
+        return new ApiCall(parentPropertyName, SyntaxFactoryMethod("TriviaList"), arguments: null);
     }
 
     private ApiCall QuoteTrivia(SyntaxTrivia syntaxTrivia)
     {
-        string factoryMethodName = SyntaxFactory("Trivia");
+        string factoryMethodName = SyntaxFactoryMethod("Trivia");
         string text = syntaxTrivia.ToString();
         if (syntaxTrivia.FullSpan.Length == 0 ||
             (syntaxTrivia.Kind() == SyntaxKind.WhitespaceTrivia && UseDefaultFormatting))
@@ -533,7 +566,7 @@ public class Quoter
                 return null;
             }
 
-            return new ApiCall(null, SyntaxFactory(triviaFactoryProperty.Name));
+            return new ApiCall(null, SyntaxFactoryMethod(triviaFactoryProperty.Name));
         }
 
         if (!string.IsNullOrEmpty(text) &&
@@ -545,28 +578,28 @@ public class Quoter
                 return null;
             }
 
-            factoryMethodName = SyntaxFactory("Whitespace");
+            factoryMethodName = SyntaxFactoryMethod("Whitespace");
         }
 
         if (syntaxTrivia.Kind() == SyntaxKind.SingleLineCommentTrivia ||
             syntaxTrivia.Kind() == SyntaxKind.MultiLineCommentTrivia)
         {
-            factoryMethodName = SyntaxFactory("Comment");
+            factoryMethodName = SyntaxFactoryMethod("Comment");
         }
 
         if (syntaxTrivia.Kind() == SyntaxKind.PreprocessingMessageTrivia)
         {
-            factoryMethodName = SyntaxFactory("PreprocessingMessage");
+            factoryMethodName = SyntaxFactoryMethod("PreprocessingMessage");
         }
 
         if (syntaxTrivia.Kind() == SyntaxKind.DisabledTextTrivia)
         {
-            factoryMethodName = SyntaxFactory("DisabledText");
+            factoryMethodName = SyntaxFactoryMethod("DisabledText");
         }
 
         if (syntaxTrivia.Kind() == SyntaxKind.DocumentationCommentExteriorTrivia)
         {
-            factoryMethodName = SyntaxFactory("DocumentationCommentExterior");
+            factoryMethodName = SyntaxFactoryMethod("DocumentationCommentExterior");
         }
 
         var t = syntaxTrivia.ToString();
@@ -621,7 +654,7 @@ public class Quoter
             {
                 quotedCodeBlock = quotedValues.First(a => a.Name == "Identifier");
                 var methodCall = quotedCodeBlock.FactoryMethodCall as MethodCall;
-                if (methodCall != null && methodCall.Name == SyntaxFactory("Identifier"))
+                if (methodCall != null && methodCall.Name == SyntaxFactoryMethod("Identifier"))
                 {
                     if (methodCall.Arguments.Count == 1)
                     {
@@ -643,7 +676,7 @@ public class Quoter
             {
                 var methodCall = quotedCodeBlock.FactoryMethodCall as MethodCall;
                 if (methodCall != null &&
-                    methodCall.Name == SyntaxFactory("Identifier") &&
+                    methodCall.Name == SyntaxFactoryMethod("Identifier") &&
                     methodCall.Arguments.Count == 1)
                 {
                     factoryMethodCall.AddArgument(methodCall.Arguments[0]);
@@ -1260,4 +1293,14 @@ public class Quoter
             Arguments.Add(value);
         }
     }
+}
+
+/// <summary>
+/// Represents one of basic C# syntax node kinds.
+/// </summary>
+public enum NodeKind
+{
+    CompilationUnit,
+    Statement,
+    Expression
 }
