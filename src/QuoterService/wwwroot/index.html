@@ -12,27 +12,39 @@
             <textarea id="inputBox" maxlength="2000" spellcheck="false">class C { }</textarea>
         </div>
         <div>
-            Parse as: 
-            <select id="nodeKind">
-                <option value="CompilationUnit">File</option>
-                <option value="Statement">Statement</option>
-                <option value="Expression">Expression</option>
-            </select>
+            <label>
+                Parse as:
+                <select id="nodeKind">
+                    <option value="CompilationUnit">File</option>
+                    <option value="Statement">Statement</option>
+                    <option value="Expression">Expression</option>
+                </select>
+            </label>
         </div>
         <div>
-            <input id="openCurlyOnNewLine" type="checkbox" />&nbsp;Open parenthesis on a new line
+            <label>
+                <input id="openCurlyOnNewLine" type="checkbox"/>&nbsp;Open parenthesis on a new line
+            </label>
         </div>
         <div>
-            <input id="closeCurlyOnNewLine" type="checkbox" />&nbsp;Closing parenthesis on a new line
+            <label>
+                <input id="closeCurlyOnNewLine" type="checkbox"/>&nbsp;Closing parenthesis on a new line
+            </label>
         </div>
         <div>
-            <input id="preserveOriginalWhitespace" type="checkbox" />&nbsp;Preserve original whitespace
+            <label>
+                <input id="preserveOriginalWhitespace" type="checkbox"/>&nbsp;Preserve original whitespace
+            </label>
         </div>
         <div>
-            <input id="keepRedundantApiCalls" type="checkbox" />&nbsp;Keep redundant API calls
+            <label>
+                <input id="keepRedundantApiCalls" type="checkbox"/>&nbsp;Keep redundant API calls
+            </label>
         </div>
         <div>
-            <input id="avoidUsingStatic" type="checkbox" />&nbsp;Do not require 'using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;'
+            <label>
+                <input id="avoidUsingStatic" type="checkbox"/>&nbsp;Do not require 'using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;'
+            </label>
         </div>
         <div>
             <button id="submitButton" type="button" onclick="onSubmitClick();">Get Roslyn API calls to generate this code!</button> &nbsp;<span id="working" style="display: none">Working...</span>
