@@ -6,7 +6,7 @@
     <script src="scripts.js"></script>
 </head>
 <body onload="onPageLoad();">
-<h1>Now open-source at <a href="https://github.com/KirillOsenkov/RoslynQuoter" target="_blank">https://github.com/KirillOsenkov/RoslynQuoter</a></h1>
+    <h1>Now open-source at <a href="https://github.com/KirillOsenkov/RoslynQuoter" target="_blank">https://github.com/KirillOsenkov/RoslynQuoter</a></h1>
     <div id="inputDiv">
         <div>
             <textarea id="inputBox" maxlength="2000" spellcheck="false">class C { }</textarea>
@@ -23,27 +23,27 @@
         </div>
         <div>
             <label>
-                <input id="openCurlyOnNewLine" type="checkbox"/>&nbsp;Open parenthesis on a new line
+                <input id="openCurlyOnNewLine" type="checkbox" />&nbsp;Open parenthesis on a new line
             </label>
         </div>
         <div>
             <label>
-                <input id="closeCurlyOnNewLine" type="checkbox"/>&nbsp;Closing parenthesis on a new line
+                <input id="closeCurlyOnNewLine" type="checkbox" />&nbsp;Closing parenthesis on a new line
             </label>
         </div>
         <div>
             <label>
-                <input id="preserveOriginalWhitespace" type="checkbox"/>&nbsp;Preserve original whitespace
+                <input id="preserveOriginalWhitespace" type="checkbox" />&nbsp;Preserve original whitespace
             </label>
         </div>
         <div>
             <label>
-                <input id="keepRedundantApiCalls" type="checkbox"/>&nbsp;Keep redundant API calls
+                <input id="keepRedundantApiCalls" type="checkbox" />&nbsp;Keep redundant API calls
             </label>
         </div>
         <div>
             <label>
-                <input id="avoidUsingStatic" type="checkbox"/>&nbsp;Do not require 'using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;'
+                <input id="avoidUsingStatic" type="checkbox" />&nbsp;Do not require 'using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;'
             </label>
         </div>
         <div>
@@ -51,11 +51,10 @@
         </div>
     </div>
     <div id="outputDiv" xml:space="preserve">
-SyntaxFactory.CompilationUnit()
+CompilationUnit()
 .WithMembers(
-    SyntaxFactory.SingletonList(
-        SyntaxFactory.ClassDeclaration(
-            @"C")))
+    SingletonList&lt;MemberDeclarationSyntax&gt;(
+        ClassDeclaration("C")))
 .NormalizeWhitespace()
     </div>
 </body>
