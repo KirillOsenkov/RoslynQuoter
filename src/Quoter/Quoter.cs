@@ -698,11 +698,23 @@ public class Quoter
                     continue;
                 }
 
-                throw new InvalidOperationException(
-                    string.Format(
-                        "Couldn't find value for parameter '{0}' of method '{1}'. Go to QuotePropertyValues() and add your node type to the exception list.",
-                        parameterName,
-                        factory));
+                // if we don't have a value just try passing null and see if it will work later
+                if (!parameterType.IsValueType)
+                {
+                    factoryMethodCall.AddArgument("null");
+                }
+                else
+                {
+                    factoryMethodCall.AddArgument(
+                        new MethodCall()
+                        {
+                            Name = "default",
+                            Arguments = new List<object>
+                            {
+                                GetPrintableTypeName(parameterType)
+                            }
+                        });
+                }
             }
         }
     }
@@ -789,11 +801,17 @@ public class Quoter
             v => parameterName.Equals(v.Name, StringComparison.OrdinalIgnoreCase));
     }
 
+    private static readonly HashSet<string> factoryMethodsToExclude = new HashSet<string>
+    {
+        "DocumentationComment",
+        "XmlNewLine",
+    };
+
     /// <summary>
     /// Static methods on Microsoft.CodeAnalysis.CSharp.SyntaxFactory class that construct SyntaxNodes
     /// </summary>
     /// <example>Syntax.ClassDeclaration()</example>
-    private static readonly Dictionary<string, List<MethodInfo>> factoryMethods = GetFactoryMethods();
+    private static readonly Dictionary<string, IEnumerable<MethodInfo>> factoryMethods = GetFactoryMethods();
 
     /// <summary>
     /// Five public properties on Microsoft.CodeAnalysis.CSharp.SyntaxFactory that return trivia: CarriageReturn,
@@ -820,9 +838,9 @@ public class Quoter
     /// Returns static methods on Microsoft.CodeAnalysis.CSharp.SyntaxFactory that return types derived from
     /// SyntaxNode and bucketizes them by overloads.
     /// </summary>
-    private static Dictionary<string, List<MethodInfo>> GetFactoryMethods()
+    private static Dictionary<string, IEnumerable<MethodInfo>> GetFactoryMethods()
     {
-        var result = new Dictionary<string, List<MethodInfo>>();
+        var result = new Dictionary<string, IEnumerable<MethodInfo>>();
 
         var staticMethods = typeof(SyntaxFactory)
             .GetMethods(BindingFlags.Public | BindingFlags.Static)
@@ -832,14 +850,20 @@ public class Quoter
         {
             var returnTypeName = method.ReturnType.Name;
 
-            List<MethodInfo> bucket = null;
+            if (factoryMethodsToExclude.Contains(method.ToString()) ||
+                factoryMethodsToExclude.Contains(method.Name))
+            {
+                continue;
+            }
+
+            IEnumerable<MethodInfo> bucket = null;
             if (!result.TryGetValue(returnTypeName, out bucket))
             {
                 bucket = new List<MethodInfo>();
                 result.Add(returnTypeName, bucket);
             }
 
-            bucket.Add(method);
+            ((List<MethodInfo>)bucket).Add(method);
         }
 
         return result;
@@ -854,10 +878,27 @@ public class Quoter
     {
         string name = node.GetType().Name;
 
-        List<MethodInfo> candidates = null;
+        IEnumerable<MethodInfo> candidates = null;
         if (!factoryMethods.TryGetValue(name, out candidates))
         {
             throw new NotSupportedException(name + " is not supported");
+        }
+
+        var candidateNames = candidates.Select(m => m.ToString()).ToArray();
+
+        // if there's exactly one method, there's nothing to deliberate
+        if (candidates.Count() == 1)
+        {
+            return candidates.First();
+        }
+
+        var usingDirectiveSyntax = node as UsingDirectiveSyntax;
+        if (usingDirectiveSyntax != null)
+        {
+            if (usingDirectiveSyntax.Alias == null)
+            {
+                candidates = candidates.Where(m => m.ToString() != "Microsoft.CodeAnalysis.CSharp.Syntax.UsingDirectiveSyntax UsingDirective(Microsoft.CodeAnalysis.CSharp.Syntax.NameEqualsSyntax, Microsoft.CodeAnalysis.CSharp.Syntax.NameSyntax)");
+            }
         }
 
         int minParameterCount = candidates.Min(m => m.GetParameters().Length);
