@@ -43,7 +43,10 @@ public class Quoter
     public bool ShortenCodeWithUsingStatic { get; set; }
 
     private readonly ScriptOptions options = ScriptOptions.Default
-        .AddReferences(typeof(SyntaxNode).Assembly, typeof(CSharpSyntaxNode).Assembly)
+        .AddReferences(
+            typeof(SyntaxNode).Assembly,
+            typeof(CSharpSyntaxNode).Assembly)
+        .AddReferences("System.Runtime")
         .AddImports(
             "System",
             "Microsoft.CodeAnalysis",
