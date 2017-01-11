@@ -804,6 +804,19 @@ public class Quoter
             v => parameterName.Equals(v.Name, StringComparison.OrdinalIgnoreCase));
     }
 
+    // In this commit: https://github.com/dotnet/roslyn/commit/4c19f1b28df66eaf3035105ec5b8bb35bfeb6869
+    // @RobinSedlaczek adds a bunch of methods that don't instantiate objects but instead delegate to other methods.
+    // It is not possible for Quoter to understand what these methods do and how the state of the nodes we examine
+    // maps to the methods. It means the methods are higher level and the mapping is not automatable.
+    // The simplest solution for now is to remove such methods from consideration and only rely on the 
+    // old methods that directly create objects in a straightforward manner.
+    // Longer term some heuristics may be possible to guess from a given parse tree which factory method
+    // is best used to create it, and manually teach quoter to use the shortcut API methods added in the
+    // commit above by @RobinSedlaczek.
+    // It is interesting how the shortcut methods, though convenient for humans, have a fundamentally different
+    // nature that a machine can "detect" and refuse to work with. It is also remarkable how the original API so far
+    // was so consistent that we never ran into this before. Basically it was possible for a machine to look at the
+    // tree produced by the API and correctly guess how to call it to produce such a tree.
     private static readonly HashSet<string> factoryMethodsToExclude = new HashSet<string>
     {
         "DocumentationComment",
