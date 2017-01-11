@@ -19,6 +19,8 @@ namespace QuoterService.Controllers
             bool keepRedundantApiCalls = false,
             bool avoidUsingStatic = false)
         {
+            string prefix = null;
+
             string responseText = "Quoter is currently down for maintenance. Please check back later.";
             if (string.IsNullOrEmpty(sourceText))
             {
@@ -46,10 +48,17 @@ namespace QuoterService.Controllers
                 catch (Exception ex)
                 {
                     responseText = ex.ToString();
+
+                    prefix = "Congratulations! You've found a bug in Quoter! Please open an issue at <a href=\"https://github.com/KirillOsenkov/RoslynQuoter/issues/new\" target=\"_blank\">https://github.com/KirillOsenkov/RoslynQuoter/issues/new</a> and paste the code you've typed above and this stack:";
                 }
             }
 
             responseText = HttpUtility.HtmlEncode(responseText);
+
+            if (prefix != null)
+            {
+                responseText = "<p>" + prefix + "</p><p>" + responseText + "</p><p><br/>P.S. Sorry!</p>";
+            }
 
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             response.Content = new StringContent(responseText, Encoding.UTF8, "text/html");
