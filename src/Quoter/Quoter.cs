@@ -1114,6 +1114,16 @@ public class Quoter
                         openParenthesisOnNewLine: openParenthesisOnNewLine,
                         closingParenthesisOnNewLine: closingParenthesisOnNewLine);
                 }
+                else if (block is MemberCall)
+                {
+                    Print(
+                        block as MemberCall,
+                        sb,
+                        depth + 1,
+                        openParenthesisOnNewLine: openParenthesisOnNewLine,
+                        closingParenthesisOnNewLine: closingParenthesisOnNewLine,
+                        useCurliesInsteadOfParentheses: useCurliesInsteadOfParentheses);
+                }
 
                 needComma = true;
             }
