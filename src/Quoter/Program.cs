@@ -18,6 +18,8 @@ namespace QuoterHost
 
             var generatedCode = quoter.Quote(sourceNode);
 
+            var code = quoter.Evaluate(generatedCode);
+
             Console.WriteLine(generatedCode);
         }
     }
