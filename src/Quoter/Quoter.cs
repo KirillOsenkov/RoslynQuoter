@@ -1164,6 +1164,21 @@ public class Quoter
         return char.ToUpperInvariant(str[0]) + str.Substring(1);
     }
 
+    private static string GetPrintableTypeName(Type parameterType)
+    {
+        if (parameterType.GenericTypeArguments.Length == 0)
+        {
+            return parameterType.Name;
+        }
+
+        var sb = new StringBuilder();
+        sb.Append(parameterType.Name.Substring(0, parameterType.Name.IndexOf('`')));
+        sb.Append("<");
+        sb.Append(string.Join(", ", parameterType.GetGenericArguments().Select(a => GetPrintableTypeName(a))));
+        sb.Append(">");
+        return sb.ToString();
+    }
+
     /// <summary>
     /// Enumerates names of properties on SyntaxNode, SyntaxToken and SyntaxTrivia classes that do
     /// not impact the shape of the syntax tree and are not essential to reconstructing the tree.
