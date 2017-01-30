@@ -540,6 +540,23 @@ class C { }");
 class C { }");
     }
 
+    [TestMethod]
+    public void TestXmlDocAll()
+    {
+        Test(@"/// <!--a-->
+/// <![CDATA[c]]>
+/// <completionlist cref=""a""/>
+/// <exception cref=""a"" />
+/// <include file='a' path='[@name=""b""]'/>
+/// <permission cref=""a"" />
+/// <remarks></remarks>
+/// <see cref=""a""/>
+/// <seealso cref=""a""/>
+/// <summary>a</summary>
+/// <example>a</example>
+class C { }");
+    }
+
     private void Test(
         string sourceText,
         string expected,
