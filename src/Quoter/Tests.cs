@@ -531,6 +531,15 @@ namespace @N
 class C { }");
     }
 
+    [TestMethod]
+    public void TestXmlDocSummaryWithNamespace()
+    {
+        Test(@"    /// <summary xml:lang=""ru"">
+    /// test
+    /// </summary>
+class C { }");
+    }
+
     private void Test(
         string sourceText,
         string expected,

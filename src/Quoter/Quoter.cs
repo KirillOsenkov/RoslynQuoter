@@ -655,7 +655,12 @@ public class Quoter
             // SyntaxFactory.IdentifierName(Syntax.Identifier("C"))
             if (parameterName == "name" && parameterType == typeof(string))
             {
-                quotedCodeBlock = quotedValues.First(a => a.Name == "Identifier");
+                quotedCodeBlock = quotedValues.FirstOrDefault(a => a.Name == "Identifier");
+                if (quotedCodeBlock == null)
+                {
+                    throw new NotImplementedException($"An unsupported factory method was chosen: {factory.ToString()}\r\nPlease add this method to the list of factoryMethodsToExclude.");
+                }
+
                 var methodCall = quotedCodeBlock.FactoryMethodCall as MethodCall;
                 if (methodCall != null && methodCall.Name == SyntaxFactoryMethod("Identifier"))
                 {
@@ -819,8 +824,11 @@ public class Quoter
     // tree produced by the API and correctly guess how to call it to produce such a tree.
     private static readonly HashSet<string> factoryMethodsToExclude = new HashSet<string>
     {
-        "DocumentationComment",
-        "XmlNewLine",
+        "DocumentationComment(",
+        "XmlNewLine(",
+        "XmlTextAttribute(System.String, Microsoft.CodeAnalysis.SyntaxToken[])", // TestXmlDocSummaryWithNamespace
+        "XmlTextAttribute(System.String, System.String)",
+        "XmlTextAttribute(Microsoft.CodeAnalysis.CSharp.Syntax.XmlNameSyntax, Microsoft.CodeAnalysis.CSharp.SyntaxKind, Microsoft.CodeAnalysis.SyntaxTokenList)"
     };
 
     /// <summary>
@@ -866,8 +874,8 @@ public class Quoter
         {
             var returnTypeName = method.ReturnType.Name;
 
-            if (factoryMethodsToExclude.Contains(method.ToString()) ||
-                factoryMethodsToExclude.Contains(method.Name))
+            var methodSignature = method.ToString();
+            if (factoryMethodsToExclude.Any(m => methodSignature.Contains(m)))
             {
                 continue;
             }
