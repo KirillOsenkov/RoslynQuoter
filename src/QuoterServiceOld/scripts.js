@@ -74,7 +74,7 @@ function enableSubmit(enabled) {
 function setResult(data) {
     var container = document.getElementById("outputDiv");
     if (container) {
-        container.innerText = data;
+        container.innerHTML = data;
     }
 }
 
