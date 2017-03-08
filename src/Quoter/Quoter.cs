@@ -828,6 +828,7 @@ public class Quoter
         "XmlNewLine(",
         "XmlTextAttribute(System.String, Microsoft.CodeAnalysis.SyntaxToken[])", // TestXmlDocSummaryWithNamespace
         "XmlTextAttribute(System.String, System.String)",
+        "XmlNameAttribute(System.String)",
         "XmlTextAttribute(Microsoft.CodeAnalysis.CSharp.Syntax.XmlNameSyntax, Microsoft.CodeAnalysis.CSharp.SyntaxKind, Microsoft.CodeAnalysis.SyntaxTokenList)"
     };
 

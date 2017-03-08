@@ -554,6 +554,7 @@ class C { }");
 /// <seealso cref=""a""/>
 /// <summary>a</summary>
 /// <example>a</example>
+/// <param name=""a"">a</param>
 class C { }");
     }
 
