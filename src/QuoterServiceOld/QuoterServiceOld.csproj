@@ -144,6 +144,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Properties\PublishProfiles\roslynquoter - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\roslynquoter - Web Deploy.pubxml" />
   </ItemGroup>
   <PropertyGroup>
