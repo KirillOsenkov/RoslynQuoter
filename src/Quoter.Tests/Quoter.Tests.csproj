@@ -11,6 +11,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="2.3.1" />
     <PackageReference Include="Microsoft.CodeAnalysis.Scripting.Common" Version="2.3.1" />
     <PackageReference Include="xunit" Version="2.2.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup>
