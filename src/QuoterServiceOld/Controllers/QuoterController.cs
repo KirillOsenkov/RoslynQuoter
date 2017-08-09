@@ -57,7 +57,7 @@ namespace QuoterService.Controllers
 
             if (prefix != null)
             {
-                responseText = "<p>" + prefix + "</p><p>" + responseText + "</p><p><br/>P.S. Sorry!</p>";
+                responseText = "<div class=\"error\"><p>" + prefix + "</p><p>" + responseText + "</p><p><br/>P.S. Sorry!</p></div>";
             }
 
             var response = new HttpResponseMessage(HttpStatusCode.OK);

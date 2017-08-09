@@ -2,6 +2,16 @@
     font-family: Segoe UI, Tahoma, Helvetica, sans-serif;
 }
 
+.para{
+    margin-left: 30px;
+}
+
+.error {
+    background-color: lightyellow;
+    border: 1px solid lightgray;
+    padding: 16px;
+}
+
 #inputDiv {
     height: 30%;
     display: block;
