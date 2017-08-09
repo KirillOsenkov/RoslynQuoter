@@ -3,12 +3,11 @@ using System.IO;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
-[TestClass]
 public class Tests
 {
-    [TestMethod]
+    [Fact]
     public void TestUsingSystemWithRedundantCalls()
     {
         Test(@"using System;
@@ -26,7 +25,7 @@ public class Tests
 .NormalizeWhitespace()", removeRedundantModifyingCalls: false);
     }
 
-    [TestMethod]
+    [Fact]
     public void TestUsingSystemWithUsingStatic()
     {
         Test(@"using System;
@@ -38,7 +37,7 @@ public class Tests
 .NormalizeWhitespace()", shortenCodeWithUsingStatic: true);
     }
 
-    [TestMethod]
+    [Fact]
     public void TestUsingSystem()
     {
         Test(@"using System;
@@ -50,7 +49,7 @@ public class Tests
 .NormalizeWhitespace()");
     }
 
-    [TestMethod]
+    [Fact]
     public void TestSimpleClass()
     {
         Test("class C { }", @"SyntaxFactory.CompilationUnit()
@@ -68,7 +67,7 @@ public class Tests
 .NormalizeWhitespace()", removeRedundantModifyingCalls: false);
     }
 
-    [TestMethod]
+    [Fact]
     public void TestMissingToken()
     {
         Test("class", @"SyntaxFactory.CompilationUnit()
@@ -87,7 +86,7 @@ public class Tests
 .NormalizeWhitespace()", removeRedundantModifyingCalls: false);
     }
 
-    [TestMethod]
+    [Fact]
     public void TestMissingTokenWithUsingStatic()
     {
         Test("class", @"CompilationUnit()
@@ -107,31 +106,31 @@ public class Tests
     }
 
 
-    [TestMethod]
+    [Fact]
     public void TestGlobal()
     {
         Test(@"class C { void M() { global::System.String s; } }");
     }
 
-    [TestMethod]
+    [Fact]
     public void TestEmptyBlock()
     {
         Test(@"class C { void M() { } }");
     }
 
-    [TestMethod]
+    [Fact]
     public void TestInterpolatedString()
     {
         Test(@"class C { string s = $""a""; }");
     }
 
-    [TestMethod]
+    [Fact]
     public void TestAttribute()
     {
         Test(@"[Foo]class C { }");
     }
 
-    [TestMethod]
+    [Fact]
     public void TestHelloWorld()
     {
         Test(@"using System;
@@ -243,7 +242,7 @@ namespace N
 .NormalizeWhitespace()", removeRedundantModifyingCalls: false);
     }
 
-    [TestMethod]
+    [Fact]
     public void TestComment()
     {
         Test(@"class C
@@ -255,43 +254,43 @@ namespace N
 }");
     }
 
-    [TestMethod]
+    [Fact]
     public void TestSimpleStringLiteral()
     {
         Test("class C { string s = \"z\"; }"); // "z"
     }
 
-    [TestMethod]
+    [Fact]
     public void TestStringLiteralWithBackslash()
     {
         Test("class C { string s = \"a\\b\"");
     }
 
-    [TestMethod]
+    [Fact]
     public void TestSimpleIntLiteral()
     {
         Test("class C { int i = 42; }");
     }
 
-    [TestMethod]
+    [Fact]
     public void TestSimpleCharLiteral()
     {
         Test("class C { char c = 'z'; }");
     }
 
-    [TestMethod]
+    [Fact]
     public void TestTrueFalseAndNull()
     {
         Test("class C { var x = true ? false : null; }");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip1()
     {
         Test("class C { string s = \"\\\"\"; }"); // "\""
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip2()
     {
         Test(@"using System;
@@ -305,37 +304,37 @@ class Program
 }");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip3()
     {
         Test("class C { string s = \"\\\"\"; }");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip4()
     {
         Test("class C { string s = @\" zzz \"\" zzz \"; }");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip5()
     {
         Test(@"class C { void M() { M(1, 2); } }");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip6()
     {
         Test(@"class C { bool b = true; }");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip7()
     {
         Test(@"#error Foo");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip8()
     {
         Test(@"#if false
@@ -343,43 +342,43 @@ int i
 #endif");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip9()
     {
         Test(@"\\\");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip10()
     {
         Test(@"/// baz <summary>foo</summary> bar");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip11()
     {
         Test(@"class /*///*/C");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip12()
     {
         Test("#pragma checksum \"file.txt\" \"{00000000-0000-0000-0000-000000000000}\" \"2453\"");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip13()
     {
         Test(@"class \\u0066 { }");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip14()
     {
         Test(@"class C { }");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip15()
     {
         Test(@"class C { void M() { ((Action)(async () =>
@@ -387,7 +386,7 @@ int i
                 }))(); } }");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip16()
     {
         Test(@"class C { void M() { a ? b : c; } }");
@@ -416,45 +415,44 @@ int i
             shortenCodeWithUsingStatic: true);
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip20()
     {
         Test("#line 1 \"a\\b\"");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip21()
     {
         Test("#line 1 \"a\\\b\"");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip22()
     {
         Test("#pragma checksum \"..\\..\"");
     }
 
-    [TestMethod]
-    [WorkItem(15194)]
+    [Fact]
     public void Roundtrip23()
     {
         Test("class C { void P { a } }");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip24()
     {
         Test(@"///
 class C { }");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip25()
     {
         Test("class C { void M(__arglist) { M(__arglist); } }");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip26()
     {
         Test(@"
@@ -468,61 +466,61 @@ namespace @N
 ");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip27()
     {
         Test("class C { void M() { int x; x = 42; } }");
     }
 
-    [TestMethod]
+    [Fact]
     public void Roundtrip28()
     {
         Test(@"[module: System.Copyright(""\n\t\u0123(C) \""2009"" + ""\u0123"")]");
     }
 
-    [TestMethod]
+    [Fact]
     public void SwitchCase()
     {
         Test(@"class C { public C() { switch(0) { case 1: break; default: break;} } } ");
     }
 
-    [TestMethod]
+    [Fact]
     public void TestObsoleteAttribute()
     {
         Test("class C { int i => 0; }");
     }
 
-    [TestMethod]
+    [Fact]
     public void TestNewlineInConstant()
     {
         Test(@"[module: System.Copyright(""\n"")]");
     }
 
-    [TestMethod]
+    [Fact]
     public void TestQuoteInLiteral()
     {
         Test(@"[module: A(""\"""")]");
     }
 
-    [TestMethod]
+    [Fact]
     public void TestQuoteInVerbatimLiteral()
     {
         Test(@"[module: A(@"""""""")]");
     }
 
-    [TestMethod]
+    [Fact]
     public void TestBackslashInLiteral()
     {
         Test(@"[module: A(""\\"")]");
     }
 
-    [TestMethod]
+    [Fact]
     public void RoundtripMissingToken()
     {
         Test("class");
     }
 
-    [TestMethod]
+    [Fact]
     public void TestXmlDocComment()
     {
         Test(@"    /// <summary>
@@ -531,7 +529,7 @@ namespace @N
 class C { }");
     }
 
-    [TestMethod]
+    [Fact]
     public void TestXmlDocSummaryWithNamespace()
     {
         Test(@"    /// <summary xml:lang=""ru"">
@@ -540,7 +538,7 @@ class C { }");
 class C { }");
     }
 
-    [TestMethod]
+    [Fact]
     public void TestXmlDocAll()
     {
         Test(@"/// <!--a-->
@@ -572,7 +570,7 @@ class C { }");
             ShortenCodeWithUsingStatic = shortenCodeWithUsingStatic
         };
         var actual = quoter.Quote(sourceText);
-        Assert.AreEqual(expected, actual);
+        Assert.Equal(expected, actual);
 
         Test(sourceText);
     }
@@ -610,7 +608,7 @@ class C { }");
             //File.WriteAllText(@"D:\3.txt", generatedCode);
         }
 
-        Assert.AreEqual(sourceText, resultText);
+        Assert.Equal(sourceText, resultText);
     }
 
     public void CheckSourceFiles()
