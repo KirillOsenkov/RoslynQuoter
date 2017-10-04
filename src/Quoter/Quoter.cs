@@ -445,6 +445,7 @@ public class Quoter
             value.Kind() != SyntaxKind.FalseKeyword &&
             value.Kind() != SyntaxKind.NullKeyword &&
             value.Kind() != SyntaxKind.ArgListKeyword &&
+            value.Kind() != SyntaxKind.DefaultKeyword &&
             !value.IsMissing)
         {
             methodName = SyntaxFactoryMethod("Literal");

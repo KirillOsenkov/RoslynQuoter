@@ -556,6 +556,17 @@ class C { }");
 class C { }");
     }
 
+    [Fact]
+    public void TestDefaultLiteral()
+    {
+        Test(@"class C
+{
+    void A(int x = default)
+    {
+    }
+}");
+    }
+
     private void Test(
         string sourceText,
         string expected,
