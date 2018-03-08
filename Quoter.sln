@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuoterServiceOld", "src\Quo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quoter.Tests", "src\Quoter.Tests\Quoter.Tests.csproj", "{2400CB20-55BB-4FDF-85CB-42591681CF11}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quoter.Web", "src\Quoter.Web\Quoter.Web.csproj", "{8726E4D4-7D55-4F90-B6B6-9DECE6A88C64}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,8 +29,15 @@ Global
 		{2400CB20-55BB-4FDF-85CB-42591681CF11}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2400CB20-55BB-4FDF-85CB-42591681CF11}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2400CB20-55BB-4FDF-85CB-42591681CF11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8726E4D4-7D55-4F90-B6B6-9DECE6A88C64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8726E4D4-7D55-4F90-B6B6-9DECE6A88C64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8726E4D4-7D55-4F90-B6B6-9DECE6A88C64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8726E4D4-7D55-4F90-B6B6-9DECE6A88C64}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {43B50B6E-3AC4-4C96-93BB-CC268492FD03}
 	EndGlobalSection
 EndGlobal
