@@ -16,7 +16,8 @@ namespace QuoterHost
                 UseDefaultFormatting = true
             };
 
-            var generatedCode = quoter.Quote(sourceNode);
+            var generatedNode = quoter.Quote(sourceNode);
+            var generatedCode = quoter.Print(generatedNode);
 
             var code = quoter.Evaluate(generatedCode);
 

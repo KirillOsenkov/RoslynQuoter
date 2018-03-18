@@ -67,9 +67,14 @@ public class Quoter
     /// <param name="sourceText">A C# program (one compilation unit)</param>
     /// <returns>A C# expression that describes calls to the Roslyn syntax API necessary to recreate
     /// the syntax tree for the source program.</returns>
-    public string Quote(string sourceText)
+    public ApiCall Quote(string sourceText)
     {
         return Quote(sourceText, NodeKind.CompilationUnit);
+    }
+
+    public string QuoteText(string sourceText, NodeKind nodeKind = NodeKind.CompilationUnit)
+    {
+        return Print(Quote(sourceText, nodeKind));
     }
 
     /// <summary>
@@ -80,7 +85,7 @@ public class Quoter
     /// <param name="nodeKind">What kind of C# syntax node should the input be parsed as</param>
     /// <returns>A C# expression that describes calls to the Roslyn syntax API necessary to recreate
     /// the syntax tree for the source text.</returns>
-    public string Quote(string sourceText, NodeKind nodeKind)
+    public ApiCall Quote(string sourceText, NodeKind nodeKind)
     {
         return Quote(Parse(sourceText, nodeKind));
     }
@@ -113,7 +118,7 @@ public class Quoter
     /// <param name="node">A C# syntax node</param>
     /// <returns>A C# expression that describes calls to the Roslyn syntax API necessary to recreate
     /// the input syntax node.</returns>
-    internal string Quote(SyntaxNode node)
+    internal ApiCall Quote(SyntaxNode node)
     {
         ApiCall rootApiCall = Quote(node, name: null);
         if (UseDefaultFormatting)
@@ -121,8 +126,7 @@ public class Quoter
             rootApiCall.Add(new MethodCall { Name = ".NormalizeWhitespace" });
         }
 
-        string generatedCode = Print(rootApiCall);
-        return generatedCode;
+        return rootApiCall;
     }
 
     /// <summary>
@@ -773,6 +777,84 @@ public class Quoter
         return EscapeAndQuote(text, verbatim, quoteChar);
     }
 
+    public static string ParseStringLiteral(string text)
+    {
+        bool verbatim = false;
+        if (text.StartsWith("@"))
+        {
+            text = text.Substring(1);
+            verbatim = true;
+        }
+
+        if (text.StartsWith("\"") && text.EndsWith("\""))
+        {
+            text = text.Substring(1, text.Length - 2);
+        }
+
+        text = Unescape(text, verbatim);
+        return text;
+    }
+
+    public static string Unescape(string text, bool verbatim)
+    {
+        if (text == "Environment.NewLine")
+        {
+            return Environment.NewLine;
+        }
+
+        if (verbatim)
+        {
+            return text.Replace("\"\"", "\"");
+        }
+
+        var sb = new StringBuilder();
+        bool backslash = false;
+        for (int i = 0; i < text.Length; i++)
+        {
+            string toAppend = text[i].ToString();
+            if (text[i] == '\\')
+            {
+                if (!backslash)
+                {
+                    backslash = true;
+                    toAppend = "";
+                }
+                else
+                {
+                    backslash = false;
+                }
+            }
+            else
+            {
+                if (backslash)
+                {
+                    if (toAppend == "n")
+                    {
+                        toAppend = "\n";
+                    }
+                    else if (toAppend == "t")
+                    {
+                        toAppend = "\t";
+                    }
+                    else if (toAppend == "r")
+                    {
+                        toAppend = "\r";
+                    }
+                    else if (toAppend == "\\")
+                    {
+                        toAppend = "\\";
+                    }
+
+                    backslash = false;
+                }
+            }
+
+            sb.Append(toAppend);
+        }
+
+        return sb.ToString();
+    }
+
     public static string EscapeAndQuote(string text, bool verbatim, string quoteChar = "\"")
     {
         if (text == Environment.NewLine)
@@ -839,11 +921,23 @@ public class Quoter
     /// <example>Syntax.ClassDeclaration()</example>
     private static readonly Dictionary<string, IEnumerable<MethodInfo>> factoryMethods = GetFactoryMethods();
 
+    private static readonly Dictionary<string, IEnumerable<MethodInfo>> factoryMethodsByName = factoryMethods
+        .Values
+        .SelectMany(g => g)
+        .GroupBy(m => m.Name)
+        .ToDictionary(g => g.Key, g => (IEnumerable<MethodInfo>)g.ToArray());
+
     /// <summary>
     /// Five public properties on Microsoft.CodeAnalysis.CSharp.SyntaxFactory that return trivia: CarriageReturn,
     /// LineFeed, CarriageReturnLineFeed, Space and Tab.
     /// </summary>
     private static readonly Dictionary<string, PropertyInfo> triviaFactoryProperties = GetTriviaFactoryProperties();
+
+    private static readonly Dictionary<string, SyntaxTrivia> triviaFactoryPropertyValues = typeof(SyntaxFactory)
+        .GetProperties(BindingFlags.Public | BindingFlags.Static)
+        .Where(propertyInfo => propertyInfo.PropertyType == typeof(SyntaxTrivia))
+        .Where(propertyInfo => !propertyInfo.Name.Contains("Elastic"))
+        .ToDictionary(p => p.Name, p => ((SyntaxTrivia)p.GetValue(null)));
 
     /// <summary>
     /// Gets the five properties on SyntaxFactory that return ready-made trivia: CarriageReturn,
@@ -870,17 +964,12 @@ public class Quoter
 
         var staticMethods = typeof(SyntaxFactory)
             .GetMethods(BindingFlags.Public | BindingFlags.Static)
-            .Where(m => m.GetCustomAttribute<ObsoleteAttribute>() == null);
+            .Where(m => m.GetCustomAttribute<ObsoleteAttribute>() == null &&
+                        !factoryMethodsToExclude.Any(e => m.ToString().Contains(e)));
 
         foreach (var method in staticMethods.OrderBy(m => m.ToString()))
         {
             var returnTypeName = method.ReturnType.Name;
-
-            var methodSignature = method.ToString();
-            if (factoryMethodsToExclude.Any(m => methodSignature.Contains(m)))
-            {
-                continue;
-            }
 
             IEnumerable<MethodInfo> bucket = null;
             if (!result.TryGetValue(returnTypeName, out bucket))
@@ -1037,27 +1126,435 @@ public class Quoter
     /// </summary>
     /// <param name="apiCallString">Code that calls Roslyn syntax APIs as a string</param>
     /// <returns>The string that corresponds to the code of the syntax tree.</returns>
-    public string Evaluate(string apiCallString, bool normalizeWhitespace = false)
+    public SyntaxNode Evaluate(string apiCallString)
     {
         var generatedNode = CSharpScript.EvaluateAsync<SyntaxNode>(apiCallString, options).Result;
+        return generatedNode;
+    }
+
+    public string EvaluateText(string apiCallString, bool normalizeWhitespace = false)
+    {
+        SyntaxNode node = Evaluate(apiCallString);
+        return GetText(normalizeWhitespace, node);
+    }
+
+    public string Evaluate(ApiCall apiCall, bool normalizeWhitespace = false)
+    {
+        //var apiCallString = Print(apiCall);
+        //var scriptingResult = EvaluateText(apiCallString, normalizeWhitespace);
+
+        var node = (SyntaxNode)InterpretApiCall(apiCall);
+        var interpretedResult = GetText(normalizeWhitespace, node);
+
+        //if (interpretedResult != scriptingResult)
+        //{
+        //    throw new Exception("Interpreter is wrong");
+        //}
+
+        return interpretedResult;
+    }
+
+    private static string GetText(bool normalizeWhitespace, SyntaxNode node)
+    {
         if (normalizeWhitespace)
         {
-            generatedNode = generatedNode.NormalizeWhitespace();
+            node = node.NormalizeWhitespace();
         }
 
-        var resultText = generatedNode.ToFullString();
+        var resultText = node.ToFullString();
         return resultText;
     }
 
-    private string Evaluate(ApiCall apiCall, bool normalizeWhitespace = false)
+    public object InterpretApiCall(ApiCall apiCall)
     {
-        return Evaluate(Print(apiCall), normalizeWhitespace);
+        if (apiCall.FactoryMethodCall is MethodCall factoryMethodCall)
+        {
+            var node = InterpretMethodCall(null, factoryMethodCall);
+            node = InterpretInstanceCalls(node, apiCall.InstanceMethodCalls);
+            return node;
+        }
+        else if (apiCall.FactoryMethodCall is MemberCall memberCall)
+        {
+            return InterpretMemberCall(memberCall);
+        }
+
+        throw new Exception("Unexpected " + apiCall.ToString());
+    }
+
+    private object InterpretInstanceCalls(object node, List<MethodCall> instanceMethodCalls)
+    {
+        if (node == null || instanceMethodCalls == null || instanceMethodCalls.Count == 0)
+        {
+            return node;
+        }
+
+        foreach (var instanceCall in instanceMethodCalls)
+        {
+            node = InterpretMethodCall(node, instanceCall);
+        }
+
+        return node;
+    }
+
+    private object InterpretMemberCall(MemberCall memberCall)
+    {
+        var name = memberCall.Name;
+        if (name.StartsWith("SyntaxFactory."))
+        {
+            name = name.Substring("SyntaxFactory.".Length);
+        }
+
+        if (triviaFactoryPropertyValues.TryGetValue(name, out var value))
+        {
+            return value;
+        }
+
+        if (name.StartsWith("SyntaxKind."))
+        {
+            name = name.Substring("SyntaxKind.".Length);
+            return Enum.Parse(typeof(SyntaxKind), name);
+        }
+
+        if (name == "true")
+        {
+            return true;
+        }
+        else if (name == "false")
+        {
+            return false;
+        }
+
+        throw new NotImplementedException();
+    }
+
+    private object InterpretMethodCall(object instance, MethodCall methodCall)
+    {
+        var name = methodCall.Name;
+        if (name.StartsWith("SyntaxFactory."))
+        {
+            name = name.Substring("SyntaxFactory.".Length);
+        }
+        else if (name.StartsWith("."))
+        {
+            name = name.Substring(1);
+        }
+
+        if (name == "new []")
+        {
+            return methodCall.Arguments.Select(a => InterpretApiCall((ApiCall)a)).ToArray();
+        }
+        else if (name.StartsWith("new ") && name.EndsWith("[]"))
+        {
+            return methodCall.Arguments.Select(a => InterpretApiCall((ApiCall)a)).ToArray();
+        }
+
+        if (instance is CompilationUnitSyntax compilationUnit && name == "NormalizeWhitespace")
+        {
+            return compilationUnit.NormalizeWhitespace();
+        }
+
+        string genericArgument;
+        Type genericArgumentType = null;
+        (name, genericArgument) = TryGetGenericArgument(name);
+        if (genericArgument != null)
+        {
+            genericArgumentType = GetType(genericArgument);
+        }
+
+        var candidates = GetCandidates(instance, name);
+        if (candidates != null && candidates.Any())
+        {
+            var (candidate, arguments) = PickCandidateMethod(name, methodCall.Arguments, candidates, genericArgumentType);
+            if (candidate == null)
+            {
+                throw new Exception("Can't pick a method to call for " + methodCall.Name);
+            }
+
+            var node = candidate.Invoke(instance, arguments);
+            return node;
+        }
+        else
+        {
+            throw new Exception("Can't find factory method for " + methodCall.Name);
+        }
+    }
+
+    private IEnumerable<MethodInfo> GetCandidates(object instance, string name)
+    {
+        if (instance == null && factoryMethodsByName.TryGetValue(name, out var candidates))
+        {
+            return candidates;
+        }
+
+        if (instance != null)
+        {
+            return instance
+                .GetType()
+                .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .Where(m => m.Name == name);
+        }
+
+        return Enumerable.Empty<MethodInfo>();
+    }
+
+    private Dictionary<string, Type> typeCache = new Dictionary<string, Type>();
+
+    private Type GetType(string typeName)
+    {
+        if (typeCache.TryGetValue(typeName, out var type))
+        {
+            return type;
+        }
+
+        type = typeof(UsingDirectiveSyntax).Assembly.GetTypes().FirstOrDefault(t => t.Name == typeName);
+        typeCache[typeName] = type;
+        return type;
+    }
+
+    private (string, string) TryGetGenericArgument(string name)
+    {
+        int openAngle = name.IndexOf('<');
+        int closeAngle = name.IndexOf('>');
+        if (openAngle > 0 && closeAngle >= openAngle && closeAngle == name.Length - 1)
+        {
+            var genericArgument = name.Substring(openAngle + 1, closeAngle - openAngle - 1);
+            name = name.Substring(0, openAngle);
+            return (name, genericArgument);
+        }
+
+        return (name, null);
+    }
+
+    private (MethodInfo, object[]) PickCandidateMethod(string name, IList<object> arguments, IEnumerable<MethodInfo> candidates, Type genericArgumentType)
+    {
+        arguments = arguments ?? Array.Empty<object>();
+        bool paramArray = false;
+        Type paramArrayType = null;
+
+        foreach (var candidate in candidates)
+        {
+            var candidateMethod = candidate;
+            if (candidateMethod.IsGenericMethodDefinition && genericArgumentType != null)
+            {
+                candidateMethod = candidateMethod.MakeGenericMethod(genericArgumentType);
+            }
+
+            var parameters = candidateMethod.GetParameters().ToList();
+            int requiredParameterCount = parameters.Count;
+            while (requiredParameterCount > 0 && requiredParameterCount > arguments.Count && parameters[requiredParameterCount - 1].IsOptional)
+            {
+                requiredParameterCount--;
+            }
+
+            if (parameters.Count > 0 &&
+                parameters[parameters.Count - 1].CustomAttributes is IEnumerable<CustomAttributeData> list &&
+                list.Any(c => c.AttributeType == typeof(ParamArrayAttribute)))
+            {
+                paramArray = true;
+                paramArrayType = parameters[parameters.Count - 1].ParameterType.GetElementType();
+            }
+
+            if (arguments.Count < requiredParameterCount)
+            {
+                if (!paramArray)
+                {
+                    continue;
+                }
+
+                if (arguments.Count < requiredParameterCount - 1)
+                {
+                    continue;
+                }
+            }
+
+            if (arguments.Count > parameters.Count && !paramArray)
+            {
+                continue;
+            }
+
+            List<object> args = new List<object>();
+            for (int i = 0; i < parameters.Count; i++)
+            {
+                if (paramArray && i == parameters.Count - 1)
+                {
+                    if (arguments.Count >= parameters.Count)
+                    {
+                        bool foundAProblem = false;
+                        List<object> array = new List<object>();
+                        for (int j = parameters.Count - 1; j < arguments.Count; j++)
+                        {
+                            var (a, m) = GetArgument(paramArrayType, arguments[j]);
+                            if (!m)
+                            {
+                                foundAProblem = true;
+                                break;
+                            }
+
+                            array.Add(a);
+                        }
+
+                        if (!foundAProblem)
+                        {
+                            args.Add(CreateArrayOfType(array, paramArrayType));
+                            return (candidateMethod, args.ToArray());
+                        }
+                    }
+                    else
+                    {
+                        args.Add(CreateArrayOfType(new object[0], paramArrayType));
+                        return (candidateMethod, args.ToArray());
+                    }
+                }
+
+                if (i >= arguments.Count)
+                {
+                    var defaultValue = parameters[i].DefaultValue;
+                    args.Add(defaultValue);
+                    continue;
+                }
+
+                var (arg, match) = GetArgument(parameters[i].ParameterType, arguments[i]);
+                if (!match)
+                {
+                    break;
+                }
+
+                args.Add(arg);
+            }
+
+            if (args.Count == parameters.Count)
+            {
+                return (candidateMethod, args.ToArray());
+            }
+        }
+
+        return (null, null);
+    }
+
+    private object CreateArrayOfType(IList list, Type elementType)
+    {
+        var array = Array.CreateInstance(elementType, list.Count);
+        for (int i = 0; i < list.Count; i++)
+        {
+            var value = list[i];
+            if (elementType == typeof(SyntaxNodeOrToken))
+            {
+                if (value is SyntaxNode n)
+                {
+                    value = (SyntaxNodeOrToken)n;
+                }
+                else if (value is SyntaxToken t)
+                {
+                    value = (SyntaxNodeOrToken)t;
+                }
+            }
+
+            array.SetValue(value, i);
+        }
+
+        return array;
+    }
+
+    private (object, bool) GetArgument(Type parameterType, object argument)
+    {
+        if (argument is ApiCall apiCall)
+        {
+            var node = InterpretApiCall(apiCall);
+            if (node != null)
+            {
+                if (node.GetType().IsArray)
+                {
+                    Type elementType = null;
+                    if (parameterType.IsArray)
+                    {
+                        elementType = parameterType.GetElementType();
+                    }
+                    else if (parameterType.IsGenericType &&
+                        parameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>) &&
+                        parameterType.GenericTypeArguments.Length == 1)
+                    {
+                        elementType = parameterType.GenericTypeArguments[0];
+                        if (elementType.IsGenericParameter)
+                        {
+                            elementType = node.GetType().GetElementType();
+                        }
+                    }
+
+                    if (elementType != null)
+                    {
+                        var elements = (IList)node;
+                        var array = Array.CreateInstance(elementType, elements.Count);
+                        for (int i = 0; i < elements.Count; i++)
+                        {
+                            var value = elements[i];
+                            if (elementType == typeof(SyntaxNodeOrToken))
+                            {
+                                if (value is SyntaxNode n)
+                                {
+                                    value = (SyntaxNodeOrToken)n;
+                                }
+                                else if (value is SyntaxToken t)
+                                {
+                                    value = (SyntaxNodeOrToken)t;
+                                }
+                            }
+
+                            array.SetValue(value, i);
+                        }
+
+                        return (array, true);
+                    }
+                }
+
+                if (parameterType.IsAssignableFrom(node.GetType()) ||
+                    parameterType.IsGenericParameter)
+                {
+                    return (node, true);
+                }
+            }
+        }
+        else if (argument is string str)
+        {
+            if (parameterType == typeof(string))
+            {
+                return (ParseStringLiteral(str), true);
+            }
+            else if (parameterType == typeof(int) && int.TryParse(str, out int int32))
+            {
+                return (int32, true);
+            }
+            else if (parameterType == typeof(double) && double.TryParse(str, out double dbl))
+            {
+                return (dbl, true);
+            }
+            else if (parameterType == typeof(char) && str.StartsWith("'") && str.EndsWith("'") && char.TryParse(str.Trim('\''), out char ch))
+            {
+                return (ch, true);
+            }
+            else if (parameterType == typeof(bool))
+            {
+                if (str == "true")
+                {
+                    return (true, true);
+                }
+                else if (str == "false")
+                {
+                    return (false, true);
+                }
+            }
+        }
+        else if (argument != null && parameterType.IsAssignableFrom(argument.GetType()))
+        {
+            return (argument, true);
+        }
+
+        return (argument, false);
     }
 
     /// <summary>
     /// Flattens a tree of ApiCalls into a single string.
     /// </summary>
-    private string Print(ApiCall root)
+    public string Print(ApiCall root)
     {
         var sb = new StringBuilder();
         Print(root, sb, 0, OpenParenthesisOnNewLine, ClosingParenthesisOnNewLine);
@@ -1290,7 +1787,7 @@ public class Quoter
     /// Data structure to represent code (API calls) of simple hierarchical shape such as:
     /// A.B(C, D.E(F(G, H), I))
     /// </example>
-    private class ApiCall
+    public class ApiCall
     {
         public string Name { get; private set; }
         public MemberCall FactoryMethodCall { get; private set; }
@@ -1356,7 +1853,7 @@ public class Quoter
     /// <summary>
     /// Simple data structure to represent a member call, primarily just the string Name.
     /// </summary>
-    private class MemberCall
+    public class MemberCall
     {
         public string Name { get; set; }
 
@@ -1371,7 +1868,7 @@ public class Quoter
     /// <summary>
     /// Represents a method call that has a Name and an arbitrary list of Arguments.
     /// </summary>
-    private class MethodCall : MemberCall
+    public class MethodCall : MemberCall
     {
         public List<object> Arguments { get; set; }
 

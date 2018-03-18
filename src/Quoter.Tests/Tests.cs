@@ -580,7 +580,7 @@ class C { }");
             RemoveRedundantModifyingCalls = removeRedundantModifyingCalls,
             ShortenCodeWithUsingStatic = shortenCodeWithUsingStatic
         };
-        var actual = quoter.Quote(sourceText);
+        var actual = quoter.QuoteText(sourceText);
         Assert.Equal(expected, actual);
 
         Test(sourceText);

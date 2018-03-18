@@ -44,7 +44,7 @@ namespace QuoterService.Controllers
                         ShortenCodeWithUsingStatic = !avoidUsingStatic
                     };
 
-                    responseText = quoter.Quote(sourceText, nodeKind);
+                    responseText = quoter.QuoteText(sourceText, nodeKind);
                 }
                 catch (Exception ex)
                 {
