@@ -1126,17 +1126,17 @@ public class Quoter
     /// </summary>
     /// <param name="apiCallString">Code that calls Roslyn syntax APIs as a string</param>
     /// <returns>The string that corresponds to the code of the syntax tree.</returns>
-    public SyntaxNode Evaluate(string apiCallString)
-    {
-        var generatedNode = CSharpScript.EvaluateAsync<SyntaxNode>(apiCallString, options).Result;
-        return generatedNode;
-    }
+    //public SyntaxNode Evaluate(string apiCallString)
+    //{
+    //    var generatedNode = CSharpScript.EvaluateAsync<SyntaxNode>(apiCallString, options).Result;
+    //    return generatedNode;
+    //}
 
-    public string EvaluateText(string apiCallString, bool normalizeWhitespace = false)
-    {
-        SyntaxNode node = Evaluate(apiCallString);
-        return GetText(normalizeWhitespace, node);
-    }
+    //public string EvaluateText(string apiCallString, bool normalizeWhitespace = false)
+    //{
+    //    SyntaxNode node = Evaluate(apiCallString);
+    //    return GetText(normalizeWhitespace, node);
+    //}
 
     public string Evaluate(ApiCall apiCall, bool normalizeWhitespace = false)
     {

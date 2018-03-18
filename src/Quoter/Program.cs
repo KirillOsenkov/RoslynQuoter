@@ -18,8 +18,7 @@ namespace QuoterHost
 
             var generatedNode = quoter.Quote(sourceNode);
             var generatedCode = quoter.Print(generatedNode);
-
-            var code = quoter.Evaluate(generatedCode);
+            var code = quoter.Evaluate(generatedNode);
 
             Console.WriteLine(generatedCode);
         }
