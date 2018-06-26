@@ -1768,6 +1768,7 @@ public class Quoter
         "IsMissing",
         "IsStructuredTrivia",
         "IsUnboundGenericName",
+        "IsUnmanaged",
         "IsVar",
         "Kind",
         "Language",
