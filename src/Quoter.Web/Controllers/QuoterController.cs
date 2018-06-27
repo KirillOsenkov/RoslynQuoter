@@ -11,14 +11,15 @@ namespace QuoterService.Controllers
     public class QuoterController : Controller
     {
         [HttpGet]
-        public string Get(
+        public IActionResult Get(
             string sourceText,
             NodeKind nodeKind = NodeKind.CompilationUnit,
             bool openCurlyOnNewLine = false,
             bool closeCurlyOnNewLine = false,
             bool preserveOriginalWhitespace = false,
             bool keepRedundantApiCalls = false,
-            bool avoidUsingStatic = false)
+            bool avoidUsingStatic = false,
+            bool generateLINQPad = false)
         {
             string prefix = null;
 
@@ -54,6 +55,25 @@ namespace QuoterService.Controllers
                 }
             }
 
+            if (generateLINQPad)
+            {
+                var linqpadFile = $@"<Query Kind=""Expression"">
+  <NuGetReference>Microsoft.CodeAnalysis.Compilers</NuGetReference>
+  <NuGetReference>Microsoft.CodeAnalysis.CSharp</NuGetReference>
+  <Namespace>static Microsoft.CodeAnalysis.CSharp.SyntaxFactory</Namespace>
+  <Namespace>Microsoft.CodeAnalysis.CSharp.Syntax</Namespace>
+  <Namespace>Microsoft.CodeAnalysis.CSharp</Namespace>
+  <Namespace>Microsoft.CodeAnalysis</Namespace>
+</Query>
+
+{responseText}
+";
+
+                var responseBytes = Encoding.UTF8.GetBytes(linqpadFile);
+
+                return File(responseBytes, "application/octet-stream", "Quoter.linq");
+            }
+
             responseText = HttpUtility.HtmlEncode(responseText);
 
             if (prefix != null)
@@ -61,7 +81,7 @@ namespace QuoterService.Controllers
                 responseText = "<div class=\"error\"><p>" + prefix + "</p><p>" + responseText + "</p><p><br/>P.S. Sorry!</p></div>";
             }
 
-            return responseText;
+            return Ok(responseText);
         }
     }
 }
