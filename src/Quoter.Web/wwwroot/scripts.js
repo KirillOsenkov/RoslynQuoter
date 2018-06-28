@@ -1,7 +1,7 @@
 ﻿function onPageLoad() {
 }
 
-function onSubmitClick() {
+function generateQuery() {
     var nodeKind = document.getElementById("nodeKind").value;
     var openCurlyOnNewLine = getCheckboxValue("openCurlyOnNewLine");
     var closeCurlyOnNewLine = getCheckboxValue("closeCurlyOnNewLine");
@@ -32,7 +32,21 @@ function onSubmitClick() {
         query = query + "&avoidUsingStatic=true";
     }
 
+    return query;
+}
+
+function onSubmitClick() {
+    var query = generateQuery();
+
     getUrl(query, loadResults);
+}
+
+function onSubmitLINQPad() {
+    var query = generateQuery();
+
+    query = query + "&generateLINQPad=true";
+
+    window.location = query;
 }
 
 function getCheckboxValue(id) {
