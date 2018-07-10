@@ -95,9 +95,9 @@ namespace RoslynQuoter
 			result.Text = responseText;
 		}
 
-		private void OnForkMe(object sender, TappedRoutedEventArgs e)
+		private async void OnForkMe(object sender, TappedRoutedEventArgs e)
 		{
-
+			await Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/nventive/Uno.RoslynQuoter"));
 		}
 	}
 }

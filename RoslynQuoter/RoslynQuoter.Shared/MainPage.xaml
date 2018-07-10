@@ -70,14 +70,11 @@
 					 AcceptsReturn="True"
 					 FontFamily="Courier New"
 					 Grid.ColumnSpan="2" />
-			<Image Grid.Row="0"
-				   Grid.RowSpan="2"
-				   Grid.Column="3"
-				   Source="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"
-				   Stretch="None"
-				   VerticalAlignment="Top"
-				   HorizontalAlignment="Right"
-				   Tapped="OnForkMe" />
 		</Grid>
+		<Image Source="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"
+				Stretch="None"
+				VerticalAlignment="Top"
+				HorizontalAlignment="Right"
+				Tapped="OnForkMe" />
 	</Grid>
 </Page>
