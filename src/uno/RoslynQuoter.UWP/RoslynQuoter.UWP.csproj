@@ -94,7 +94,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
-    <ProjectReference Include="..\..\src\Quoter\Quoter.csproj">
+    <ProjectReference Include="..\..\Quoter\Quoter.csproj">
       <Project>{927ab47f-479c-423a-b21f-5dec48533e1d}</Project>
       <Name>Quoter</Name>
     </ProjectReference>

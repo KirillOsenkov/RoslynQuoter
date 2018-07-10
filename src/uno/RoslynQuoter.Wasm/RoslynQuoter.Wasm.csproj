@@ -40,7 +40,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\src\Quoter\Quoter.csproj" />
+	  <ProjectReference Include="..\..\Quoter\Quoter.csproj" />
 	</ItemGroup>
 
 	<Import Project="..\RoslynQuoter.Shared\RoslynQuoter.Shared.projitems" Label="Shared" Condition="Exists('..\RoslynQuoter.Shared\RoslynQuoter.Shared.projitems')" />

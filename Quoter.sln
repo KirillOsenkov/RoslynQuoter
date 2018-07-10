@@ -11,16 +11,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quoter.Web", "src\Quoter.We
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "uno", "uno", "{03213811-C0E4-4165-A36A-21955DEECD9B}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "RoslynQuoter.Shared", "RoslynQuoter\RoslynQuoter.Shared\RoslynQuoter.Shared.shproj", "{6279C845-92F8-4333-AB99-3D213163593C}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "RoslynQuoter.Shared", "src\uno\RoslynQuoter.Shared\RoslynQuoter.Shared.shproj", "{6279C845-92F8-4333-AB99-3D213163593C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoslynQuoter.UWP", "RoslynQuoter\RoslynQuoter.UWP\RoslynQuoter.UWP.csproj", "{20F64AA7-D240-49D8-BC35-578E322C7279}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoslynQuoter.UWP", "src\uno\RoslynQuoter.UWP\RoslynQuoter.UWP.csproj", "{20F64AA7-D240-49D8-BC35-578E322C7279}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoslynQuoter.Wasm", "RoslynQuoter\RoslynQuoter.Wasm\RoslynQuoter.Wasm.csproj", "{A706D15C-B407-42A2-B6E3-B6F88BA24E7E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoslynQuoter.Wasm", "src\uno\RoslynQuoter.Wasm\RoslynQuoter.Wasm.csproj", "{A706D15C-B407-42A2-B6E3-B6F88BA24E7E}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		RoslynQuoter\RoslynQuoter.Shared\RoslynQuoter.Shared.projitems*{20f64aa7-d240-49d8-bc35-578e322c7279}*SharedItemsImports = 4
-		RoslynQuoter\RoslynQuoter.Shared\RoslynQuoter.Shared.projitems*{6279c845-92f8-4333-ab99-3d213163593c}*SharedItemsImports = 13
+		src\uno\RoslynQuoter.Shared\RoslynQuoter.Shared.projitems*{20f64aa7-d240-49d8-bc35-578e322c7279}*SharedItemsImports = 4
+		src\uno\RoslynQuoter.Shared\RoslynQuoter.Shared.projitems*{6279c845-92f8-4333-ab99-3d213163593c}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Ad-Hoc|Any CPU = Ad-Hoc|Any CPU
