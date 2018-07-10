@@ -30,9 +30,9 @@
 				<Hyperlink NavigateUri="https://platform.uno">Uno Platform </Hyperlink>
 				<Hyperlink NavigateUri="https://github.com/nventive/Uno.RoslynQuoter">fork</Hyperlink>
 				of Kirill Osenkov's
-				<Hyperlink NavigateUri="http://github.com">Roslyn Quoter App</Hyperlink>
+				<Hyperlink NavigateUri="https://github.com/KirillOsenkov/RoslynQuoter">Roslyn Quoter App</Hyperlink>
 				<xamarin:Run Text="running on" />
-				<wasm:Run Text="and WebAssembly" />
+				<wasm:Run Text="WebAssembly" />
 				</TextBlock>
 				<TextBlock>This application is running <Bold>entirely locally</Bold> on your machine, no code is being sent out to the wire.</TextBlock>
 			</StackPanel>
