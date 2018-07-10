@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <AssemblyName>Quoter</AssemblyName>
-    <OutputType>Exe</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 

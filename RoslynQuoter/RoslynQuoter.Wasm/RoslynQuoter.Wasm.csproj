@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<WasmHead>true</WasmHead>
+		<DefineConstants>$(DefineConstants);__WASM__</DefineConstants>
+		<NoWarn>NU1701</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Content Include="..\RoslynQuoter.UWP\Assets\*.png" Link="Assets\%(FileName)%(Extension)" />
+		<Content Include="Fonts\winjs-symbols.woff2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="WasmCSS\Fonts.css" />
+		<EmbeddedResource Include="WasmScripts\AppManifest.js" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<LinkerDescriptor Include="LinkerConfig.xml" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<!-- 
+    This item group is required by the project templace because of the
+    new SDK-Style project, otherwise some files are not aded automatically.
+    
+    You can safely this ItemGroup completely.
+    -->
+		<Compile Remove="Program.cs" />
+		<Compile Include="Program.cs" />
+		<Content Include="LinkerConfig.xml" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Uno.UI" Version="1.31.0-dev.161" />
+		<PackageReference Include="Uno.Wasm.Bootstrap" Version="1.0.0-dev.32" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\src\Quoter\Quoter.csproj" />
+	</ItemGroup>
+
+	<Import Project="..\RoslynQuoter.Shared\RoslynQuoter.Shared.projitems" Label="Shared" Condition="Exists('..\RoslynQuoter.Shared\RoslynQuoter.Shared.projitems')" />
+
+</Project>

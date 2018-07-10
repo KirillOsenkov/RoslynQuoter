@@ -1,0 +1,83 @@
+﻿<Page x:Class="RoslynQuoter.MainPage"
+	  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	  xmlns:xamarin="http://uno/xamarin"
+	  xmlns:wasm="http://uno/wasm"
+	  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	  xmlns:local="using:RoslynQuoter"
+	  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	  mc:Ignorable="d xamarin wasm">
+
+	<Grid>
+
+		<Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+			  Margin="15">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="*" />
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="auto" />
+				<RowDefinition />
+				<RowDefinition Height="auto" />
+				<RowDefinition />
+			</Grid.RowDefinitions>
+			<StackPanel Grid.ColumnSpan="2"
+						Margin="0,0,0,15">
+				<TextBlock  FontWeight="Bold"
+							FontSize="20">
+				Welcome to the
+				<Hyperlink NavigateUri="https://platform.uno">Uno Platform </Hyperlink>
+				<Hyperlink NavigateUri="https://github.com/nventive/Uno.RoslynQuoter">fork</Hyperlink>
+				of Kirill Osenkov's
+				<Hyperlink NavigateUri="http://github.com">Roslyn Quoter App</Hyperlink>
+				<xamarin:Run Text="running on" />
+				<wasm:Run Text="and WebAssembly" />
+				</TextBlock>
+				<TextBlock>This application is running <Bold>entirely locally</Bold> on your machine, no code is being sent out to the wire.</TextBlock>
+			</StackPanel>
+			<TextBox AcceptsReturn="true"
+					 Grid.Row="1"
+					 ScrollViewer.VerticalScrollBarVisibility="Auto"
+					 x:Name="inputCode"
+					 PlaceholderText="Input some C# code"
+					 TextChanged="OnCodeChanged"
+					 Margin="0,0,10,10" />
+			<StackPanel Grid.Row="2">
+				<Button Content="Generate"
+						Click="OnGenerateCode"
+						HorizontalAlignment="Left"
+						Margin="0,0,0,0"
+						VerticalAlignment="Center" />
+				<ComboBox x:Name="comboParseAs"
+						  Header="Parse as:">
+				</ComboBox>
+				<CheckBox x:Name="checkBoxOpenParenthesis"
+						  Content="Open parenthesis on a new line" />
+				<CheckBox x:Name="checkBoxCloseParenthesis"
+						  Content="Closing parenthesis on a new line " />
+				<CheckBox x:Name="checkBoxPreserveWhiteSpace"
+						  Content="Preserve original whitespace " />
+				<CheckBox x:Name="checkBoxKeepRedundant"
+						  Content="Keep redundant API calls " />
+				<CheckBox x:Name="checkBoxNoSyntaxFactory"
+						  Content="Do not require 'using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;' " />
+			</StackPanel>
+			<TextBox x:Name="result"
+					 Grid.Column="1"
+					 Grid.Row="1"
+					 Grid.RowSpan="3"
+					 AcceptsReturn="True"
+					 FontFamily="Courier New"
+					 Grid.ColumnSpan="2" />
+			<Image Grid.Row="0"
+				   Grid.RowSpan="2"
+				   Grid.Column="3"
+				   Source="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"
+				   Stretch="None"
+				   VerticalAlignment="Top"
+				   HorizontalAlignment="Right"
+				   Tapped="OnForkMe" />
+		</Grid>
+	</Grid>
+</Page>
