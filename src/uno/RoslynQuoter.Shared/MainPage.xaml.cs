@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -27,6 +28,8 @@ namespace RoslynQuoter
 		public MainPage()
 		{
 			this.InitializeComponent();
+
+			buildVersion.Text = $"Build: {this.GetType().GetTypeInfo().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "Unkown"}";
 
 			_kinds = new[] {
 				NodeKind.CompilationUnit,

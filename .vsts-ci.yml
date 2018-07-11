@@ -41,4 +41,4 @@ phases:
     inputs:
       pathToPublish: .\src\uno\RoslynQuoter.Wasm\bin\Release\netstandard2.0\dist
       artifactType: container
-      artifactName: Wasm
+      artifactName: RoslynQuoter-Wasm
