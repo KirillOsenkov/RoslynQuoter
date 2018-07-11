@@ -1,0 +1,44 @@
+phases:
+- phase: VS_Latest
+  variables:
+    NUGET_PACKAGES: $(Agent.WorkFolder)\.nuget
+    NUGET_HTTP_CACHE_PATH: $(Agent.WorkFolder)\.nuget-http-cache
+    SourceLinkEnabled: false
+
+  steps:
+  - task: GitVersion@3
+    inputs:
+      updateAssemblyInfo: false   
+      
+  - task: NuGetToolInstaller@0
+    inputs:
+        versionSpec: 4.7.0
+        checkLatest: false
+
+  - task: NuGetCommand@2
+    inputs:
+      command: restore
+      solution: src\Quoter.sln
+      selectOrConfig: select
+      includeNuGetOrg: true
+      verbosityRestore: Normal
+
+  - task: MSBuild@1
+    inputs:
+      solution: src\Quoter.sln
+      msbuildLocationMethod: version
+      msbuildVersion: latest
+      msbuildArchitecture: x86
+      msbuildArguments: /r /p:Configuration=Release "/p:PackageVersion=%GITVERSION_FullSemVer%" "/p:InformationalVersion=%GITVERSION_InformationalVersion%" /detailedsummary
+      clean: false
+      maximumCpuCount: true
+      restoreNugetPackages: false
+      logProjectEvents: false
+      createLogFile: false
+  
+- task: PublishBuildArtifacts@1
+  displayName: Publish Package Artifacts
+  inputs:
+    pathToPublish: .\src\uno\RoslynQuoter.Wasm\bin\Release\netstandard2.0\dist
+    artifactType: container
+    artifactName: Wasm
