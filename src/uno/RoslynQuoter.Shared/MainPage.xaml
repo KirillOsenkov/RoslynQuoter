@@ -24,17 +24,23 @@
 			</Grid.RowDefinitions>
 			<StackPanel Grid.ColumnSpan="2"
 						Margin="0,0,0,15">
-				<TextBlock  FontWeight="Bold"
-							FontSize="20">
-				Welcome to the
+				<TextBlock FontWeight="Bold"
+							FontSize="20"
+						   TextWrapping="Wrap">
+				<Run Text="Welcome to the" />
 				<Hyperlink NavigateUri="https://platform.uno">Uno Platform </Hyperlink>
 				<Hyperlink NavigateUri="https://github.com/nventive/Uno.RoslynQuoter">fork</Hyperlink>
-				of Kirill Osenkov's
+				<Run Text="of Kirill Osenkov's" />
 				<Hyperlink NavigateUri="https://github.com/KirillOsenkov/RoslynQuoter">Roslyn Quoter App</Hyperlink>
 				<xamarin:Run Text="running on" />
 				<wasm:Run Text="WebAssembly" />
 				</TextBlock>
-				<TextBlock>This application is running <Bold>entirely locally</Bold> on your machine, no code is being sent out to the wire.</TextBlock>
+				<TextBlock Margin="0,0,0,10" TextWrapping="Wrap">This application is running <Bold>entirely locally</Bold> on your machine, no code is being sent out to the wire.</TextBlock>
+				<TextBlock FontStyle="Italic" TextWrapping="Wrap">
+					Note that this app is running the mono interpreted mode
+					(which is about <Hyperlink NavigateUri="https://github.com/stefan-schweiger/dotWasmBenchmark">50x slower
+					than it should be</Hyperlink>), and is for the time being best experienced in Microsoft Edge or Firefox.
+				</TextBlock>
 			</StackPanel>
 			<TextBox AcceptsReturn="true"
 					 Grid.Row="1"
