@@ -18,14 +18,14 @@ phases:
   - task: NuGetCommand@2
     inputs:
       command: restore
-      solution: src\Quoter.sln
+      solution: Quoter.sln
       selectOrConfig: select
       includeNuGetOrg: true
       verbosityRestore: Normal
 
   - task: MSBuild@1
     inputs:
-      solution: src\Quoter.sln
+      solution: Quoter.sln
       msbuildLocationMethod: version
       msbuildVersion: latest
       msbuildArchitecture: x86
@@ -36,9 +36,9 @@ phases:
       logProjectEvents: false
       createLogFile: false
   
-- task: PublishBuildArtifacts@1
-  displayName: Publish Package Artifacts
-  inputs:
-    pathToPublish: .\src\uno\RoslynQuoter.Wasm\bin\Release\netstandard2.0\dist
-    artifactType: container
-    artifactName: Wasm
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Package Artifacts
+    inputs:
+      pathToPublish: .\src\uno\RoslynQuoter.Wasm\bin\Release\netstandard2.0\dist
+      artifactType: container
+      artifactName: Wasm
