@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
@@ -48,12 +50,85 @@ namespace RoslynQuoter
 
 		private void OnGenerateCode(object sender, RoutedEventArgs e)
 		{
+			result.Text = GenerateCode();
+		}
+
+		private async void OnGenerateLinqPadCode(object sender, RoutedEventArgs e)
+		{
+			var linqpadFile = $@"<Query Kind=""Expression"">
+				  <NuGetReference>Microsoft.CodeAnalysis.Compilers</NuGetReference>
+				  <NuGetReference>Microsoft.CodeAnalysis.CSharp</NuGetReference>
+				  <Namespace>static Microsoft.CodeAnalysis.CSharp.SyntaxFactory</Namespace>
+				  <Namespace>Microsoft.CodeAnalysis.CSharp.Syntax</Namespace>
+				  <Namespace>Microsoft.CodeAnalysis.CSharp</Namespace>
+				  <Namespace>Microsoft.CodeAnalysis</Namespace>
+				</Query>
+
+				{GenerateCode()}
+			";
+
+
+#if !__WASM__
+			try
+			{
+				var savePicker = new Windows.Storage.Pickers.FileSavePicker();
+
+				savePicker.SuggestedStartLocation =
+					Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+				savePicker.FileTypeChoices.Add("LINQPad File", new List<string>() { ".linq" });
+				savePicker.SuggestedFileName = "Quoter";
+
+				Windows.Storage.StorageFile file = await savePicker.PickSaveFileAsync();
+
+				// Prevent updates to the remote version of the file until
+				// we finish making changes and call CompleteUpdatesAsync.
+				Windows.Storage.CachedFileManager.DeferUpdates(file);
+
+				// write to file
+				await Windows.Storage.FileIO.WriteTextAsync(file, linqpadFile);
+
+				// Let Windows know that we're finished changing the file so
+				// the other app can update the remote version of the file.
+				// Completing updates may require Windows to ask for user input.
+				Windows.Storage.Provider.FileUpdateStatus status =
+					await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
+			}
+			catch(Exception ex)
+			{
+				Console.WriteLine(ex);
+			}
+#else
+			SaveFileAs("Quoter.linq", linqpadFile);
+#endif
+		}
+
+#if __WASM__
+		private static void SaveFileAs(string fileName, string content)
+		{
+			var data = Encoding.UTF8.GetBytes(content);
+
+			GCHandle gch = GCHandle.Alloc(data, GCHandleType.Pinned);
+			var pinnedData = gch.AddrOfPinnedObject();
+
+			try
+			{
+				Console.WriteLine("Invoking saveAs...");
+				Uno.Foundation.WebAssemblyRuntime.InvokeJS($@"fileSaveAs('{fileName}', {pinnedData}, {data.Length})");
+			}
+			finally
+			{
+				gch.Free();
+			}
+		}
+#endif
+
+
+		private string GenerateCode()
+		{
 			string responseText = "";
 
 			try
 			{
-				Console.WriteLine("OnGenerateCode");
-
 				string sourceText = inputCode.Text;
 
 				var nodeKind = _kinds[comboParseAs.SelectedIndex];
@@ -72,8 +147,6 @@ namespace RoslynQuoter
 				}
 				else
 				{
-					Console.WriteLine("OnGenerateCode 2");
-
 					var quoter = new Quoter
 					{
 						OpenParenthesisOnNewLine = openCurlyOnNewLine,
@@ -95,7 +168,7 @@ namespace RoslynQuoter
 				responseText += ex.ToString();
 			}
 
-			result.Text = responseText;
+			return responseText;
 		}
 
 		private async void OnForkMe(object sender, TappedRoutedEventArgs e)

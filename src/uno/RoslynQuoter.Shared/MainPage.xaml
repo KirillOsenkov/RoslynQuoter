@@ -51,11 +51,18 @@
 					 TextChanged="OnCodeChanged"
 					 Margin="0,0,10,10" />
 			<StackPanel Grid.Row="2">
-				<Button Content="Generate"
-						Click="OnGenerateCode"
-						HorizontalAlignment="Left"
-						Margin="0,0,0,0"
-						VerticalAlignment="Center" />
+				<StackPanel Orientation="Horizontal" Spacing="10">
+					<Button Content="Generate"
+							Click="OnGenerateCode"
+							HorizontalAlignment="Left"
+							Margin="0,0,0,0"
+							VerticalAlignment="Center" />
+					<Button Content="Generate LINQPad File"
+							Click="OnGenerateLinqPadCode"
+							HorizontalAlignment="Left"
+							Margin="0,0,0,0"
+							VerticalAlignment="Center" />
+				</StackPanel>
 				<ComboBox x:Name="comboParseAs"
 						  Header="Parse as:">
 				</ComboBox>
