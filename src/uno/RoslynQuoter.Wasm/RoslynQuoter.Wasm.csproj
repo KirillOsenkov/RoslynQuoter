@@ -11,11 +11,12 @@
 	<ItemGroup>
 		<Content Include="..\RoslynQuoter.UWP\Assets\*.png" Link="Assets\%(FileName)%(Extension)" />
 		<Content Include="Fonts\winjs-symbols.woff2" />
+		<Content Include="tsconfig.json" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<EmbeddedResource Include="WasmCSS\Fonts.css" />
-		<EmbeddedResource Include="WasmScripts\AppManifest.js" />
+		<EmbeddedResource Include="WasmScripts\*.js" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -30,13 +31,16 @@
     You can safely this ItemGroup completely.
     -->
 		<Compile Remove="Program.cs" />
+		<None Remove="tsconfig.json" />
 		<Compile Include="Program.cs" />
 		<Content Include="LinkerConfig.xml" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Uno.UI" Version="1.31.0-dev.161" />
-		<PackageReference Include="Uno.Wasm.Bootstrap" Version="1.0.0-dev.32" />
+		<PackageReference Include="Uno.UI" Version="1.31.0-dev.182" />
+		<PackageReference Include="Uno.Wasm.Bootstrap" Version="1.0.0-dev.38" />
+		<PackageReference Include="Microsoft.TypeScript.Compiler" Version="2.8.3" />
+		<PackageReference Include="Microsoft.TypeScript.MSBuild" Version="2.8.3" />
 	</ItemGroup>
 
 	<ItemGroup>
