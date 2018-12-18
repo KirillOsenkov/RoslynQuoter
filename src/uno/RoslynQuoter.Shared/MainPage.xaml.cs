@@ -26,12 +26,13 @@ namespace RoslynQuoter
 	public sealed partial class MainPage : Page
 	{
 		private readonly NodeKind[] _kinds;
+		public string buildVersion;
 
 		public MainPage()
 		{
 			this.InitializeComponent();
 
-			buildVersion.Text = $"Build: {this.GetType().GetTypeInfo().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "Unkown"}";
+			buildVersion = $"Version: {this.GetType().GetTypeInfo().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "Unkown"}";
 
 			_kinds = new[] {
 				NodeKind.CompilationUnit,
@@ -169,11 +170,6 @@ namespace RoslynQuoter
 			}
 
 			return responseText;
-		}
-
-		private async void OnForkMe(object sender, TappedRoutedEventArgs e)
-		{
-			await Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/nventive/Uno.RoslynQuoter"));
 		}
 	}
 }
