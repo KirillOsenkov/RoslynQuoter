@@ -1,0 +1,6 @@
+Get Roslyn API calls to generate this code as LINQPad file!
+CompilationUnit()
+.WithMembers(
+    SingletonList<MemberDeclarationSyntax>(
+        ClassDeclaration("C")))
+.NormalizeWhitespace()
