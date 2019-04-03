@@ -102,6 +102,8 @@ public class Quoter
         {
             case NodeKind.CompilationUnit:
                 return SyntaxFactory.ParseCompilationUnit(sourceText);
+            case NodeKind.MemberDeclaration:
+                return SyntaxFactory.ParseMemberDeclaration(sourceText);
             case NodeKind.Statement:
                 return SyntaxFactory.ParseStatement(sourceText);
             case NodeKind.Expression:
@@ -1891,6 +1893,7 @@ public class Quoter
 public enum NodeKind
 {
     CompilationUnit,
+    MemberDeclaration,
     Statement,
     Expression
 }
