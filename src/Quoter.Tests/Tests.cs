@@ -570,7 +570,7 @@ class C { }");
     [Fact]
     public void TestIssue49()
     {
-        Test(@"if () {}", "Parse error", nodeKind: NodeKind.MemberDeclaration);
+        Test(@"if () {}", "Parse error. Have you selected the right Parse As context?", nodeKind: NodeKind.MemberDeclaration);
     }
 
     private void Test(

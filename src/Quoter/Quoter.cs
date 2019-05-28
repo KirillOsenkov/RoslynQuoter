@@ -96,7 +96,7 @@ public class Quoter
         var node = Parse(sourceText, nodeKind);
         if (node == null)
         {
-            return new ApiCall("Parse error");
+            return new ApiCall("Parse error. Have you selected the right Parse As context?");
         }
 
         return Quote(node);
