@@ -74,7 +74,13 @@ public class Quoter
 
     public string QuoteText(string sourceText, NodeKind nodeKind = NodeKind.CompilationUnit)
     {
-        return Print(Quote(sourceText, nodeKind));
+        var node = Quote(sourceText, nodeKind);
+        if (node == null)
+        {
+            return "Parse error";
+        }
+
+        return Print(node);
     }
 
     /// <summary>
@@ -87,7 +93,13 @@ public class Quoter
     /// the syntax tree for the source text.</returns>
     public ApiCall Quote(string sourceText, NodeKind nodeKind)
     {
-        return Quote(Parse(sourceText, nodeKind));
+        var node = Parse(sourceText, nodeKind);
+        if (node == null)
+        {
+            return new ApiCall("Parse error");
+        }
+
+        return Quote(node);
     }
 
     /// <summary>
@@ -1584,13 +1596,22 @@ public class Quoter
         bool openParenthesisOnNewLine = false,
         bool closingParenthesisOnNewLine = false)
     {
-        Print(
-            codeBlock.FactoryMethodCall,
-            sb,
-            depth,
-            useCurliesInsteadOfParentheses: codeBlock.UseCurliesInsteadOfParentheses,
-            openParenthesisOnNewLine: openParenthesisOnNewLine,
-            closingParenthesisOnNewLine: closingParenthesisOnNewLine);
+        if (codeBlock.FactoryMethodCall != null)
+        {
+            Print(
+                codeBlock.FactoryMethodCall,
+                sb,
+                depth,
+                useCurliesInsteadOfParentheses: codeBlock.UseCurliesInsteadOfParentheses,
+                openParenthesisOnNewLine: openParenthesisOnNewLine,
+                closingParenthesisOnNewLine: closingParenthesisOnNewLine);
+        }
+        else
+        {
+            Print(codeBlock.Name, sb, 0);
+            return;
+        }
+
         if (codeBlock.InstanceMethodCalls != null)
         {
             foreach (var call in codeBlock.InstanceMethodCalls)
@@ -1799,6 +1820,11 @@ public class Quoter
 
         public ApiCall()
         {
+        }
+
+        public ApiCall(string text)
+        {
+            Name = text;
         }
 
         public ApiCall(string parentPropertyName, string factoryMethodName)
