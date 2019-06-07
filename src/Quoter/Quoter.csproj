@@ -1,10 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AssemblyName>Quoter</AssemblyName>
-    <OutputType>Exe</OutputType>
+    <AssemblyName>RoslynQuoter</AssemblyName>
+    <OutputType>Library</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageId>RoslynQuoter</PackageId>
+    <Authors>Kirill Osenkov</Authors>
+    <Company>Microsoft</Company>
+    <Version>1.0.0</Version>
+    <Description>A Roslyn tool that for a given C# program shows the syntax factory API calls to construct its syntax tree.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/KirillOsenkov/RoslynQuoter</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/KirillOsenkov/RoslynQuoter</RepositoryUrl>
+    <PackageTags>Roslyn Quoter Syntax Tree SyntaxTree Parser Expression</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Program.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.0.0" />
