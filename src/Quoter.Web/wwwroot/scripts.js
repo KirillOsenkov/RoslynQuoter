@@ -1,4 +1,12 @@
-﻿function onPageLoad() {
+﻿var editor;
+
+function onPageLoad() {
+    ace.config.set('basePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/');
+
+    editor = ace.edit("inputBox");
+    editor.setTheme("ace/theme/textmate");
+    editor.setKeyboardHandler("ace/keyboard/vscode");
+    editor.session.setMode("ace/mode/csharp");
 }
 
 function generateQuery() {
@@ -8,7 +16,7 @@ function generateQuery() {
     var preserveOriginalWhitespace = getCheckboxValue("preserveOriginalWhitespace");
     var keepRedundantApiCalls = getCheckboxValue("keepRedundantApiCalls");
     var avoidUsingStatic = getCheckboxValue("avoidUsingStatic");
-    var query = "api/quoter/?sourceText=" + encodeURIComponent(inputBox.value);
+    var query = "api/quoter/?sourceText=" + encodeURIComponent(editor.getValue());
 
     query = query + "&nodeKind=" + nodeKind;
 

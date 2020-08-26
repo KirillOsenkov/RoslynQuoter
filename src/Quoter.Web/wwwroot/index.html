@@ -3,6 +3,7 @@
 <head>
     <title>Roslyn Quoter</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.min.js" integrity="sha512-GoORoNnxst42zE3rYPj4bNBm0Q6ZRXKNH2D9nEmNvVF/z24ywVnijAWVi/09iBiVDQVf3UlZHpzhAJIdd9BXqw==" crossorigin="anonymous"></script>
     <script src="scripts.js"></script>
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-115404565-5"></script>
@@ -17,9 +18,7 @@
 <body onload="onPageLoad();">
     <p class="para">Open-source at <a href="https://github.com/KirillOsenkov/RoslynQuoter" target="_blank">https://github.com/KirillOsenkov/RoslynQuoter</a></p>
     <div id="inputDiv">
-        <div>
-            <textarea id="inputBox" maxlength="2000" spellcheck="false">class C { }</textarea>
-        </div>
+        <div id="inputBox"></div>
         <div>
             <label>
                 Parse as:
