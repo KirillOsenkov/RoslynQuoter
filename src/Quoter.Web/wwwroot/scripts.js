@@ -1,4 +1,5 @@
 ﻿var editor;
+var resultDisplay;
 
 function onPageLoad() {
     ace.config.set('basePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/');
@@ -7,6 +8,16 @@ function onPageLoad() {
     editor.setTheme("ace/theme/textmate");
     editor.setKeyboardHandler("ace/keyboard/vscode");
     editor.session.setMode("ace/mode/csharp");
+
+    resultDisplay = ace.edit("outputBox",
+    {
+        minLines: 5,
+        maxLines: 500
+    });
+    resultDisplay.setReadOnly(true);
+    resultDisplay.setTheme("ace/theme/textmate");
+    resultDisplay.setKeyboardHandler("ace/keyboard/vscode");
+    resultDisplay.session.setMode("ace/mode/csharp");
 }
 
 function generateQuery() {
@@ -94,12 +105,12 @@ function enableSubmit(enabled) {
 }
 
 function setResult(data) {
-    var container = document.getElementById("outputDiv");
-    if (container) {
-        container.innerHTML = data;
-    }
+    resultDisplay.setValue(data);
 }
 
 function loadResults(data) {
-    setResult(data);
+    // The return value is XML encoded, decode special chars
+    var doc = new DOMParser().parseFromString(data, "text/html");
+
+    setResult(doc.documentElement.textContent);
 }
