@@ -115,7 +115,7 @@ namespace RoslynQuoter
             switch (nodeKind)
             {
                 case NodeKind.CompilationUnit:
-                    return SyntaxFactory.ParseCompilationUnit(sourceText);
+                    return SyntaxFactory.ParseCompilationUnit(sourceText, options: new CSharpParseOptions(LanguageVersion.Preview));
                 case NodeKind.MemberDeclaration:
                     return SyntaxFactory.ParseMemberDeclaration(sourceText);
                 case NodeKind.Statement:
@@ -1774,35 +1774,38 @@ namespace RoslynQuoter
         /// </summary>
         private static readonly string[] nonStructuralProperties =
         {
-        "AllowsAnyExpression",
-        "Arity",
-        "ContainsAnnotations",
-        "ContainsDiagnostics",
-        "ContainsDirectives",
-        "ContainsSkippedText",
-        "DirectiveNameToken",
-        "FullSpan",
-        "HasLeadingTrivia",
-        "HasTrailingTrivia",
-        "HasStructuredTrivia",
-        "HasStructure",
-        "IsConst",
-        "IsDirective",
-        "IsElastic",
-        "IsFixed",
-        "IsMissing",
-        "IsStructuredTrivia",
-        "IsUnboundGenericName",
-        "IsUnmanaged",
-        "IsVar",
-        "Kind",
-        "Language",
-        "Parent",
-        "ParentTrivia",
-        "PlainName",
-        "Span",
-        "SyntaxTree",
-    };
+            "AllowsAnyExpression",
+            "Arity",
+            "ContainsAnnotations",
+            "ContainsDiagnostics",
+            "ContainsDirectives",
+            "ContainsSkippedText",
+            "DirectiveNameToken",
+            "FullSpan",
+            "HasLeadingTrivia",
+            "HasStructure",
+            "HasStructuredTrivia",
+            "HasTrailingTrivia",
+            "IsConst",
+            "IsDirective",
+            "IsElastic",
+            "IsFixed",
+            "IsMissing",
+            "IsNint",
+            "IsNotNull",
+            "IsNuint",
+            "IsStructuredTrivia",
+            "IsUnboundGenericName",
+            "IsUnmanaged",
+            "IsVar",
+            "Kind",
+            "Language",
+            "Parent",
+            "ParentTrivia",
+            "PlainName",
+            "Span",
+            "SyntaxTree",
+        };
 
         /// <summary>
         /// "Stringly typed" representation of a C# property or method invocation expression, with a
