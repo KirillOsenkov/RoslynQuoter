@@ -27,56 +27,57 @@ function generateQuery() {
     var preserveOriginalWhitespace = getCheckboxValue("preserveOriginalWhitespace");
     var keepRedundantApiCalls = getCheckboxValue("keepRedundantApiCalls");
     var avoidUsingStatic = getCheckboxValue("avoidUsingStatic");
-    var query = "api/quoter/?sourceText=" + encodeURIComponent(editor.getValue());
-
-    query = query + "&nodeKind=" + nodeKind;
+    var arguments = new Object();
+    arguments.sourceText = editor.getValue();
+    arguments.nodeKind = nodeKind;
 
     if (openCurlyOnNewLine) {
-        query = query + "&openCurlyOnNewLine=true";
+        arguments.openCurlyOnNewLine = true;
     }
 
     if (closeCurlyOnNewLine) {
-        query = query + "&closeCurlyOnNewLine=true";
+        arguments.closeCurlyOnNewLine = true;
     }
 
     if (preserveOriginalWhitespace) {
-        query = query + "&preserveOriginalWhitespace=true";
+        arguments.preserveOriginalWhitespace = true;
     }
 
     if (keepRedundantApiCalls) {
-        query = query + "&keepRedundantApiCalls=true";
+        arguments.keepRedundantApiCalls = true;
     }
 
     if (avoidUsingStatic) {
-        query = query + "&avoidUsingStatic=true";
+        arguments.avoidUsingStatic = true;
     }
 
-    return query;
+    return arguments;
 }
 
 function onSubmitClick() {
-    var query = generateQuery();
+    var arguments = generateQuery();
 
-    getUrl(query, loadResults);
+    getUrl(arguments, loadResults);
 }
 
 function onSubmitLINQPad() {
-    var query = generateQuery();
+    var arguments = generateQuery();
 
-    query = query + "&generateLINQPad=true";
+    arguments.generateLINQPad = true;
 
-    window.location = query;
-}
+    window.location = arguments;
+} 
 
 function getCheckboxValue(id) {
     return document.getElementById(id).checked;
 }
 
-function getUrl(url, callback) {
+function getUrl(requestArgument, callback) {
     enableSubmit(false);
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", url, true);
-    xhr.setRequestHeader("Accept", "text/html");
+    xhr.open("POST", "api/quoter", true);
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.setRequestHeader("Content-type", "application/json");
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4) {
             var data = xhr.responseText;
@@ -87,7 +88,7 @@ function getUrl(url, callback) {
 
         enableSubmit(true);
     };
-    xhr.send();
+    xhr.send(JSON.stringify(requestArgument));
     return xhr;
 }
 
