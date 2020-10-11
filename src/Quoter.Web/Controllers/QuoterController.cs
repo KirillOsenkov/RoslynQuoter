@@ -2,7 +2,7 @@
 using System.Text;
 using System.Web;
 using Microsoft.AspNetCore.Mvc;
-using Quoter.Web.Dtos;
+using QuoterWeb;
 using RoslynQuoter;
 
 namespace QuoterService.Controllers
@@ -17,7 +17,9 @@ namespace QuoterService.Controllers
 
             string responseText = "Quoter is currently down for maintenance. Please check back later.";
             if (arguments is null)
+            {
                 return BadRequest(responseText);
+            }
 
             if (string.IsNullOrEmpty(arguments.SourceText))
             {

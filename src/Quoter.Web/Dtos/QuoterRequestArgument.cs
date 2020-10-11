@@ -1,6 +1,6 @@
 ﻿using RoslynQuoter;
 
-namespace Quoter.Web.Dtos
+namespace QuoterWeb
 {
     public class QuoterRequestArgument
     {
