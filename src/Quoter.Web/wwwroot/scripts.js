@@ -82,6 +82,7 @@ function getUrl(requestArgument, callback) {
         if (xhr.readyState == 4) {
             var data = xhr.responseText;
             if (typeof data === "string" && data.length > 0) {
+                data = JSON.parse(data);
                 callback(data);
             }
         }
