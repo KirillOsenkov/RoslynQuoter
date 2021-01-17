@@ -574,6 +574,12 @@ class C { }");
         Test(@"if () {}", "Parse error. Have you selected the right Parse As context?", nodeKind: NodeKind.MemberDeclaration);
     }
 
+    [Fact]
+    public void TestIssue61()
+    {
+        Test(@"void M() { var a = M() is char and > 'H' }");
+    }
+
     private void Test(
         string sourceText,
         string expected,

@@ -228,6 +228,7 @@ namespace RoslynQuoter
             if (node is AccessorDeclarationSyntax ||
                 node is AssignmentExpressionSyntax ||
                 node is BinaryExpressionSyntax ||
+                node is BinaryPatternSyntax ||
                 node is ClassOrStructConstraintSyntax ||
                 node is CheckedExpressionSyntax ||
                 node is CheckedStatementSyntax ||
