@@ -1284,7 +1284,9 @@ namespace RoslynQuoter
                 var (candidate, arguments) = PickCandidateMethod(name, methodCall.Arguments, candidates, genericArgumentType);
                 if (candidate == null)
                 {
-                    throw new Exception("Can't pick a method to call for " + methodCall.Name);
+                    throw new Exception(
+                        $@"Can't pick a method to call for {methodCall.Name}.
+If the first parameter is of type SyntaxKind, please add an exception for this node type in QuotePropertyValues().");
                 }
 
                 var node = candidate.Invoke(instance, arguments);
