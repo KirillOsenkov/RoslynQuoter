@@ -20,7 +20,7 @@ function onPageLoad() {
     resultDisplay.session.setMode("ace/mode/csharp");
 }
 
-function generateQuery() {
+function generateArguments() {
     var nodeKind = document.getElementById("nodeKind").value;
     var openCurlyOnNewLine = getCheckboxValue("openCurlyOnNewLine");
     var closeCurlyOnNewLine = getCheckboxValue("closeCurlyOnNewLine");
@@ -54,18 +54,45 @@ function generateQuery() {
     return arguments;
 }
 
+function generateLinqpadQuery(arguments) {
+    var query = "api/linqpad/?sourceText=" + encodeURIComponent(arguments.sourceText);
+    query = query + "&nodeKind=" + arguments.nodeKind;
+
+    if (openCurlyOnNewLine) {
+        query = query + "&openCurlyOnNewLine=true";
+    }
+
+    if (closeCurlyOnNewLine) {
+        query = query + "&closeCurlyOnNewLine=true";
+    }
+
+    if (preserveOriginalWhitespace) {
+        query = query + "&preserveOriginalWhitespace=true";
+    }
+
+    if (keepRedundantApiCalls) {
+        query = query + "&keepRedundantApiCalls=true";
+    }
+
+    if (avoidUsingStatic) {
+        query = query + "&avoidUsingStatic=true";
+    }
+
+    return query;
+}
+
+
 function onSubmitClick() {
-    var arguments = generateQuery();
+    var arguments = generateArguments();
 
     getUrl(arguments, loadResults);
 }
 
 function onSubmitLINQPad() {
-    var arguments = generateQuery();
+    var arguments = generateArguments();
+    var query = generateLinqpadQuery(arguments);
 
-    arguments.generateLINQPad = true;
-
-    window.location = arguments;
+    window.location = query;
 } 
 
 function getCheckboxValue(id) {
