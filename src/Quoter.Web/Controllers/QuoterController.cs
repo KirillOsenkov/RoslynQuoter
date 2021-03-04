@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using System.Web;
 using Microsoft.AspNetCore.Mvc;
 using QuoterWeb;
@@ -50,25 +49,6 @@ namespace QuoterService.Controllers
 
                     prefix = "Congratulations! You've found a bug in Quoter! Please open an issue at <a href=\"https://github.com/KirillOsenkov/RoslynQuoter/issues/new\" target=\"_blank\">https://github.com/KirillOsenkov/RoslynQuoter/issues/new</a> and paste the code you've typed above and this stack:";
                 }
-            }
-
-            if (arguments.GenerateLinqPad)
-            {
-                var linqpadFile = $@"<Query Kind=""Expression"">
-  <NuGetReference>Microsoft.CodeAnalysis.Compilers</NuGetReference>
-  <NuGetReference>Microsoft.CodeAnalysis.CSharp</NuGetReference>
-  <Namespace>static Microsoft.CodeAnalysis.CSharp.SyntaxFactory</Namespace>
-  <Namespace>Microsoft.CodeAnalysis.CSharp.Syntax</Namespace>
-  <Namespace>Microsoft.CodeAnalysis.CSharp</Namespace>
-  <Namespace>Microsoft.CodeAnalysis</Namespace>
-</Query>
-
-{responseText}
-";
-
-                var responseBytes = Encoding.UTF8.GetBytes(linqpadFile);
-
-                return File(responseBytes, "application/octet-stream", "Quoter.linq");
             }
 
             responseText = HttpUtility.HtmlEncode(responseText);
