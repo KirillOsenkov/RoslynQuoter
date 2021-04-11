@@ -385,6 +385,15 @@ namespace RoslynQuoter
             return codeBlock;
         }
 
+        private static SyntaxKind GetContextualKind(SyntaxToken value)
+        {
+            var property = typeof(SyntaxToken).GetProperty("RawContextualKind",
+                BindingFlags.NonPublic | BindingFlags.Instance);
+            var result = property.GetValue(value);
+
+            return (SyntaxKind)(int)result;
+        }
+
         private ApiCall QuoteToken(SyntaxToken value, string name)
         {
             if (value == default(SyntaxToken) || value.Kind() == SyntaxKind.None)
@@ -412,23 +421,29 @@ namespace RoslynQuoter
             if (value.Kind() == SyntaxKind.IdentifierToken && !value.IsMissing)
             {
                 methodName = SyntaxFactoryMethod("Identifier");
-                if (value.IsMissing)
-                {
-                    methodName = SyntaxFactoryMethod("MissingToken");
-                }
 
-                if (value.IsMissing)
+                var contextualKind = GetContextualKind(value);
+                var kind = value.Kind();
+                actualValue = escapedTokenValueText;
+
+                //is it required for escaped identifiers (like "st\u0061tic")?
+                if (contextualKind != kind || verbatim)
                 {
-                    actualValue = value.Kind();
+                    leading = leading ?? GetEmptyTrivia("LeadingTrivia");
+                    trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
+
+                    arguments.Add(leading);
+                    arguments.Add(contextualKind);
+                    arguments.Add(actualValue);
+                    arguments.Add(EscapeAndQuote(value.ValueText));
+                    arguments.Add(trailing);
                 }
                 else
                 {
-                    actualValue = escapedTokenValueText;
+                    AddIfNotNull(arguments, leading);
+                    arguments.Add(actualValue);
+                    AddIfNotNull(arguments, trailing);
                 }
-
-                AddIfNotNull(arguments, leading);
-                arguments.Add(actualValue);
-                AddIfNotNull(arguments, trailing);
             }
             else if (value.Kind() == SyntaxKind.InterpolatedStringTextToken && !value.IsMissing)
             {
