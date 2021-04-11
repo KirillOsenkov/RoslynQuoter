@@ -27,6 +27,7 @@ function generateArguments() {
     var preserveOriginalWhitespace = getCheckboxValue("preserveOriginalWhitespace");
     var keepRedundantApiCalls = getCheckboxValue("keepRedundantApiCalls");
     var avoidUsingStatic = getCheckboxValue("avoidUsingStatic");
+    var readyToRun = getCheckboxValue("readyToRun");
     var arguments = new Object();
     arguments.sourceText = editor.getValue();
     arguments.nodeKind = nodeKind;
@@ -49,6 +50,10 @@ function generateArguments() {
 
     if (avoidUsingStatic) {
         arguments.avoidUsingStatic = true;
+    }
+
+    if (readyToRun) {
+        arguments.readyToRun = true;
     }
 
     return arguments;

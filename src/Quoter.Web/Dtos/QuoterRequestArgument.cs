@@ -12,5 +12,6 @@ namespace QuoterWeb
         public bool KeepRedundantApiCalls { get; set; }
         public bool AvoidUsingStatic { get; set; }
         public bool GenerateLinqPad { get; set; }
+        public bool ReadyToRun { get; set; }
     }
 }

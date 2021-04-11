@@ -42,6 +42,11 @@ namespace QuoterService.Controllers
                     };
 
                     responseText = quoter.QuoteText(arguments.SourceText, arguments.NodeKind);
+
+                    if (arguments.ReadyToRun)
+                    {
+                        responseText = ReadyToRunHelper.CreateReadyToRunCode(arguments, responseText);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -50,7 +55,7 @@ namespace QuoterService.Controllers
                     prefix = "Congratulations! You've found a bug in Quoter! Please open an issue at <a href=\"https://github.com/KirillOsenkov/RoslynQuoter/issues/new\" target=\"_blank\">https://github.com/KirillOsenkov/RoslynQuoter/issues/new</a> and paste the code you've typed above and this stack:";
                 }
             }
-
+            
             responseText = HttpUtility.HtmlEncode(responseText);
 
             if (prefix != null)
