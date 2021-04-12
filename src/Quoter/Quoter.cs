@@ -395,7 +395,7 @@ namespace RoslynQuoter
             var arguments = new List<object>();
             string methodName = SyntaxFactoryMethod("Token");
             var tokenText = value.Text;
-            bool verbatim = 
+            bool verbatim =
                 tokenText.StartsWith("@") ||
                 tokenText.Contains("\r") ||
                 tokenText.Contains("\n");
@@ -414,7 +414,7 @@ namespace RoslynQuoter
                 methodName = SyntaxFactoryMethod("Identifier");
 
                 var kind = value.Kind();
-                
+
                 if (verbatim)
                 {
                     leading = leading ?? GetEmptyTrivia("LeadingTrivia");
@@ -425,7 +425,8 @@ namespace RoslynQuoter
                     arguments.Add(escapedTokenText);
                     arguments.Add(EscapeAndQuote(value.ValueText));
                     arguments.Add(trailing);
-                } else
+                }
+                else
                 if (SyntaxFacts.GetContextualKeywordKind(value.ValueText) is var contextualKeyWord
                     && contextualKeyWord != SyntaxKind.None)
                 {
