@@ -385,15 +385,6 @@ namespace RoslynQuoter
             return codeBlock;
         }
 
-        private static SyntaxKind GetContextualKind(SyntaxToken value)
-        {
-            var property = typeof(SyntaxToken).GetProperty("RawContextualKind",
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            var result = property.GetValue(value);
-
-            return (SyntaxKind)(int)result;
-        }
-
         private ApiCall QuoteToken(SyntaxToken value, string name)
         {
             if (value == default(SyntaxToken) || value.Kind() == SyntaxKind.None)
@@ -403,13 +394,13 @@ namespace RoslynQuoter
 
             var arguments = new List<object>();
             string methodName = SyntaxFactoryMethod("Token");
-            bool verbatim =
-                value.Text.StartsWith("@") ||
-                value.Text.Contains("\r") ||
-                value.Text.Contains("\n");
-            string escapedTokenValueText = EscapeAndQuote(value.ToString(), verbatim);
+            var tokenText = value.Text;
+            bool verbatim = 
+                tokenText.StartsWith("@") ||
+                tokenText.Contains("\r") ||
+                tokenText.Contains("\n");
+            string escapedTokenText = EscapeAndQuote(tokenText, verbatim);
             object leading = GetLeadingTrivia(value);
-            object actualValue;
             object trailing = GetTrailingTrivia(value);
 
             if (leading != null || trailing != null)
@@ -422,26 +413,35 @@ namespace RoslynQuoter
             {
                 methodName = SyntaxFactoryMethod("Identifier");
 
-                var contextualKind = GetContextualKind(value);
                 var kind = value.Kind();
-                actualValue = escapedTokenValueText;
-
-                //is it required for escaped identifiers (like "st\u0061tic")?
-                if (contextualKind != kind || verbatim)
+                
+                if (verbatim)
                 {
                     leading = leading ?? GetEmptyTrivia("LeadingTrivia");
                     trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
 
                     arguments.Add(leading);
-                    arguments.Add(contextualKind);
-                    arguments.Add(actualValue);
+                    arguments.Add(kind);
+                    arguments.Add(escapedTokenText);
                     arguments.Add(EscapeAndQuote(value.ValueText));
+                    arguments.Add(trailing);
+                } else
+                if (SyntaxFacts.GetContextualKeywordKind(value.ValueText) is var contextualKeyWord
+                    && contextualKeyWord != SyntaxKind.None)
+                {
+                    leading = leading ?? GetEmptyTrivia("LeadingTrivia");
+                    trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
+
+                    arguments.Add(leading);
+                    arguments.Add(contextualKeyWord);
+                    arguments.Add(escapedTokenText);
+                    arguments.Add(escapedTokenText);
                     arguments.Add(trailing);
                 }
                 else
                 {
                     AddIfNotNull(arguments, leading);
-                    arguments.Add(actualValue);
+                    arguments.Add(escapedTokenText);
                     AddIfNotNull(arguments, trailing);
                 }
             }
@@ -451,8 +451,8 @@ namespace RoslynQuoter
                 trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
                 AddIfNotNull(arguments, leading);
                 arguments.Add(value.Kind());
-                arguments.Add(escapedTokenValueText);
-                arguments.Add(escapedTokenValueText);
+                arguments.Add(escapedTokenText);
+                arguments.Add(escapedTokenText);
                 AddIfNotNull(arguments, trailing);
             }
             else if ((value.Kind() == SyntaxKind.XmlTextLiteralToken ||
@@ -470,8 +470,8 @@ namespace RoslynQuoter
                 }
 
                 arguments.Add(leading ?? GetEmptyTrivia("LeadingTrivia"));
-                arguments.Add(escapedTokenValueText);
-                arguments.Add(escapedTokenValueText);
+                arguments.Add(escapedTokenText);
+                arguments.Add(escapedTokenText);
                 arguments.Add(trailing ?? GetEmptyTrivia("TrailingTrivia"));
             }
             else if ((value.Parent is LiteralExpressionSyntax ||
@@ -535,7 +535,7 @@ namespace RoslynQuoter
 
                 if (value.Kind() == SyntaxKind.BadToken)
                 {
-                    tokenValue = escapedTokenValueText;
+                    tokenValue = escapedTokenText;
                 }
 
                 AddIfNotNull(arguments, leading);
