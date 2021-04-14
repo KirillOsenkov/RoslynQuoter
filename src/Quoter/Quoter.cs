@@ -394,13 +394,13 @@ namespace RoslynQuoter
 
             var arguments = new List<object>();
             string methodName = SyntaxFactoryMethod("Token");
+            var tokenText = value.Text;
             bool verbatim =
-                value.Text.StartsWith("@") ||
-                value.Text.Contains("\r") ||
-                value.Text.Contains("\n");
-            string escapedTokenValueText = EscapeAndQuote(value.ToString(), verbatim);
+                tokenText.StartsWith("@") ||
+                tokenText.Contains("\r") ||
+                tokenText.Contains("\n");
+            string escapedTokenText = EscapeAndQuote(tokenText, verbatim);
             object leading = GetLeadingTrivia(value);
-            object actualValue;
             object trailing = GetTrailingTrivia(value);
 
             if (leading != null || trailing != null)
@@ -412,23 +412,39 @@ namespace RoslynQuoter
             if (value.Kind() == SyntaxKind.IdentifierToken && !value.IsMissing)
             {
                 methodName = SyntaxFactoryMethod("Identifier");
-                if (value.IsMissing)
-                {
-                    methodName = SyntaxFactoryMethod("MissingToken");
-                }
 
-                if (value.IsMissing)
+                var kind = value.Kind();
+
+                if (verbatim)
                 {
-                    actualValue = value.Kind();
+                    leading = leading ?? GetEmptyTrivia("LeadingTrivia");
+                    trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
+
+                    arguments.Add(leading);
+                    arguments.Add(kind);
+                    arguments.Add(escapedTokenText);
+                    arguments.Add(EscapeAndQuote(value.ValueText));
+                    arguments.Add(trailing);
+                }
+                else
+                if (SyntaxFacts.GetContextualKeywordKind(value.ValueText) is var contextualKeyWord
+                    && contextualKeyWord != SyntaxKind.None)
+                {
+                    leading = leading ?? GetEmptyTrivia("LeadingTrivia");
+                    trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
+
+                    arguments.Add(leading);
+                    arguments.Add(contextualKeyWord);
+                    arguments.Add(escapedTokenText);
+                    arguments.Add(escapedTokenText);
+                    arguments.Add(trailing);
                 }
                 else
                 {
-                    actualValue = escapedTokenValueText;
+                    AddIfNotNull(arguments, leading);
+                    arguments.Add(escapedTokenText);
+                    AddIfNotNull(arguments, trailing);
                 }
-
-                AddIfNotNull(arguments, leading);
-                arguments.Add(actualValue);
-                AddIfNotNull(arguments, trailing);
             }
             else if (value.Kind() == SyntaxKind.InterpolatedStringTextToken && !value.IsMissing)
             {
@@ -436,8 +452,8 @@ namespace RoslynQuoter
                 trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
                 AddIfNotNull(arguments, leading);
                 arguments.Add(value.Kind());
-                arguments.Add(escapedTokenValueText);
-                arguments.Add(escapedTokenValueText);
+                arguments.Add(escapedTokenText);
+                arguments.Add(escapedTokenText);
                 AddIfNotNull(arguments, trailing);
             }
             else if ((value.Kind() == SyntaxKind.XmlTextLiteralToken ||
@@ -455,8 +471,8 @@ namespace RoslynQuoter
                 }
 
                 arguments.Add(leading ?? GetEmptyTrivia("LeadingTrivia"));
-                arguments.Add(escapedTokenValueText);
-                arguments.Add(escapedTokenValueText);
+                arguments.Add(escapedTokenText);
+                arguments.Add(escapedTokenText);
                 arguments.Add(trailing ?? GetEmptyTrivia("TrailingTrivia"));
             }
             else if ((value.Parent is LiteralExpressionSyntax ||
@@ -520,7 +536,7 @@ namespace RoslynQuoter
 
                 if (value.Kind() == SyntaxKind.BadToken)
                 {
-                    tokenValue = escapedTokenValueText;
+                    tokenValue = escapedTokenText;
                 }
 
                 AddIfNotNull(arguments, leading);

@@ -580,6 +580,14 @@ class C { }");
         Test(@"void M() { var a = M() is char and > 'H' }");
     }
 
+    [Fact]
+    public void TestIdentifiers()
+    {
+        Test(@"using System;
+var @class = 12;
+Console.WriteLine(nameof(@class));");
+    }
+
     private void Test(
         string sourceText,
         string expected,
