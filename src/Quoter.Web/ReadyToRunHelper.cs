@@ -36,7 +36,7 @@ var diag = compilation.GetDiagnostics().Where(e => e.Severity == DiagnosticSever
 
 foreach(var d in diag)
 {{
-  Console.WriteLine(d);	
+    Console.WriteLine(d);
 }}";
         }
     }

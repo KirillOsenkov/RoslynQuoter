@@ -387,7 +387,7 @@ namespace RoslynQuoter
 
         private ApiCall QuoteToken(SyntaxToken value, string name)
         {
-            if (value == default(SyntaxToken) || value.Kind() == SyntaxKind.None)
+            if (value == default || value.Kind() == SyntaxKind.None)
             {
                 return null;
             }
@@ -426,8 +426,7 @@ namespace RoslynQuoter
                     arguments.Add(EscapeAndQuote(value.ValueText));
                     arguments.Add(trailing);
                 }
-                else
-                if (SyntaxFacts.GetContextualKeywordKind(value.ValueText) is var contextualKeyWord
+                else if (SyntaxFacts.GetContextualKeywordKind(value.ValueText) is var contextualKeyWord
                     && contextualKeyWord != SyntaxKind.None)
                 {
                     leading = leading ?? GetEmptyTrivia("LeadingTrivia");
@@ -506,7 +505,7 @@ namespace RoslynQuoter
 
                 if (shouldAddTrivia ||
                     (value.Kind() == SyntaxKind.StringLiteralToken &&
-                    value.ToString() != Microsoft.CodeAnalysis.CSharp.SyntaxFactory.Literal(value.ValueText).ToString()))
+                    value.ToString() != SyntaxFactory.Literal(value.ValueText).ToString()))
                 {
                     arguments.Add(escapedText);
                 }
