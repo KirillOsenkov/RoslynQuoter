@@ -385,23 +385,27 @@ namespace RoslynQuoter
             return codeBlock;
         }
 
-        private ApiCall QuoteToken(SyntaxToken value, string name)
+        private ApiCall QuoteToken(SyntaxToken token, string name)
         {
-            if (value == default || value.Kind() == SyntaxKind.None)
+            var tokenKind = token.Kind();
+            var tokenText = token.Text;
+            var tokenValueText = token.ValueText;
+            bool tokenIsMissing = token.IsMissing;
+
+            if (token == default || tokenKind == SyntaxKind.None)
             {
                 return null;
             }
 
             var arguments = new List<object>();
             string methodName = SyntaxFactoryMethod("Token");
-            var tokenText = value.Text;
             bool verbatim =
                 tokenText.StartsWith("@") ||
                 tokenText.Contains("\r") ||
                 tokenText.Contains("\n");
             string escapedTokenText = EscapeAndQuote(tokenText, verbatim);
-            object leading = GetLeadingTrivia(value);
-            object trailing = GetTrailingTrivia(value);
+            object leading = GetLeadingTrivia(token);
+            object trailing = GetTrailingTrivia(token);
 
             if (leading != null || trailing != null)
             {
@@ -409,11 +413,9 @@ namespace RoslynQuoter
                 trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
             }
 
-            if (value.Kind() == SyntaxKind.IdentifierToken && !value.IsMissing)
+            if (tokenKind == SyntaxKind.IdentifierToken && !tokenIsMissing)
             {
                 methodName = SyntaxFactoryMethod("Identifier");
-
-                var kind = value.Kind();
 
                 if (verbatim)
                 {
@@ -421,12 +423,12 @@ namespace RoslynQuoter
                     trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
 
                     arguments.Add(leading);
-                    arguments.Add(kind);
+                    arguments.Add(tokenKind);
                     arguments.Add(escapedTokenText);
-                    arguments.Add(EscapeAndQuote(value.ValueText));
+                    arguments.Add(EscapeAndQuote(tokenValueText));
                     arguments.Add(trailing);
                 }
-                else if (SyntaxFacts.GetContextualKeywordKind(value.ValueText) is var contextualKeyWord
+                else if (SyntaxFacts.GetContextualKeywordKind(tokenValueText) is var contextualKeyWord
                     && contextualKeyWord != SyntaxKind.None)
                 {
                     leading = leading ?? GetEmptyTrivia("LeadingTrivia");
@@ -445,26 +447,26 @@ namespace RoslynQuoter
                     AddIfNotNull(arguments, trailing);
                 }
             }
-            else if (value.Kind() == SyntaxKind.InterpolatedStringTextToken && !value.IsMissing)
+            else if (tokenKind == SyntaxKind.InterpolatedStringTextToken && !tokenIsMissing)
             {
                 leading = leading ?? GetEmptyTrivia("LeadingTrivia");
                 trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
                 AddIfNotNull(arguments, leading);
-                arguments.Add(value.Kind());
+                arguments.Add(tokenKind);
                 arguments.Add(escapedTokenText);
                 arguments.Add(escapedTokenText);
                 AddIfNotNull(arguments, trailing);
             }
-            else if ((value.Kind() == SyntaxKind.XmlTextLiteralToken ||
-                value.Kind() == SyntaxKind.XmlTextLiteralNewLineToken ||
-                value.Kind() == SyntaxKind.XmlEntityLiteralToken) && !value.IsMissing)
+            else if ((tokenKind == SyntaxKind.XmlTextLiteralToken ||
+                tokenKind == SyntaxKind.XmlTextLiteralNewLineToken ||
+                tokenKind == SyntaxKind.XmlEntityLiteralToken) && !tokenIsMissing)
             {
                 methodName = SyntaxFactoryMethod("XmlTextLiteral");
-                if (value.Kind() == SyntaxKind.XmlTextLiteralNewLineToken)
+                if (tokenKind == SyntaxKind.XmlTextLiteralNewLineToken)
                 {
                     methodName = SyntaxFactoryMethod("XmlTextNewLine");
                 }
-                else if (value.Kind() == SyntaxKind.XmlEntityLiteralToken)
+                else if (tokenKind == SyntaxKind.XmlEntityLiteralToken)
                 {
                     methodName = SyntaxFactoryMethod("XmlEntity");
                 }
@@ -474,15 +476,15 @@ namespace RoslynQuoter
                 arguments.Add(escapedTokenText);
                 arguments.Add(trailing ?? GetEmptyTrivia("TrailingTrivia"));
             }
-            else if ((value.Parent is LiteralExpressionSyntax ||
-                value.Kind() == SyntaxKind.StringLiteralToken ||
-                value.Kind() == SyntaxKind.NumericLiteralToken) &&
-                value.Kind() != SyntaxKind.TrueKeyword &&
-                value.Kind() != SyntaxKind.FalseKeyword &&
-                value.Kind() != SyntaxKind.NullKeyword &&
-                value.Kind() != SyntaxKind.ArgListKeyword &&
-                value.Kind() != SyntaxKind.DefaultKeyword &&
-                !value.IsMissing)
+            else if ((token.Parent is LiteralExpressionSyntax ||
+                tokenKind == SyntaxKind.StringLiteralToken ||
+                tokenKind == SyntaxKind.NumericLiteralToken) &&
+                tokenKind != SyntaxKind.TrueKeyword &&
+                tokenKind != SyntaxKind.FalseKeyword &&
+                tokenKind != SyntaxKind.NullKeyword &&
+                tokenKind != SyntaxKind.ArgListKeyword &&
+                tokenKind != SyntaxKind.DefaultKeyword &&
+                !tokenIsMissing)
             {
                 methodName = SyntaxFactoryMethod("Literal");
                 bool shouldAddTrivia = leading != null || trailing != null;
@@ -491,21 +493,21 @@ namespace RoslynQuoter
                     arguments.Add(leading ?? GetEmptyTrivia("LeadingTrivia"));
                 }
 
-                string escapedText = EscapeAndQuote(value.Text);
-                string escapedValue = EscapeAndQuote(value.ValueText);
+                string escapedText = EscapeAndQuote(tokenText);
+                string escapedValue = EscapeAndQuote(tokenValueText);
 
-                if (value.Kind() == SyntaxKind.CharacterLiteralToken)
+                if (tokenKind == SyntaxKind.CharacterLiteralToken)
                 {
-                    escapedValue = EscapeAndQuote(value.ValueText, "'");
+                    escapedValue = EscapeAndQuote(tokenValueText, "'");
                 }
-                else if (value.Kind() != SyntaxKind.StringLiteralToken)
+                else if (tokenKind != SyntaxKind.StringLiteralToken)
                 {
-                    escapedValue = value.ValueText;
+                    escapedValue = tokenValueText;
                 }
 
                 if (shouldAddTrivia ||
-                    (value.Kind() == SyntaxKind.StringLiteralToken &&
-                    value.ToString() != SyntaxFactory.Literal(value.ValueText).ToString()))
+                    (tokenKind == SyntaxKind.StringLiteralToken &&
+                    token.ToString() != SyntaxFactory.Literal(tokenValueText).ToString()))
                 {
                     arguments.Add(escapedText);
                 }
@@ -519,21 +521,21 @@ namespace RoslynQuoter
             }
             else
             {
-                if (value.IsMissing)
+                if (tokenIsMissing)
                 {
                     methodName = SyntaxFactoryMethod("MissingToken");
                 }
 
-                if (value.Kind() == SyntaxKind.BadToken)
+                if (tokenKind == SyntaxKind.BadToken)
                 {
                     methodName = SyntaxFactoryMethod("BadToken");
                     leading = leading ?? GetEmptyTrivia("LeadingTrivia");
                     trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
                 }
 
-                object tokenValue = value.Kind();
+                object tokenValue = tokenKind;
 
-                if (value.Kind() == SyntaxKind.BadToken)
+                if (tokenKind == SyntaxKind.BadToken)
                 {
                     tokenValue = escapedTokenText;
                 }
