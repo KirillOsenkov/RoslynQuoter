@@ -502,7 +502,7 @@ namespace RoslynQuoter
                 }
                 else if (tokenKind != SyntaxKind.StringLiteralToken)
                 {
-                    escapedValue = tokenValueText;
+                    escapedValue = tokenText;
                 }
 
                 if (shouldAddTrivia ||
@@ -1282,9 +1282,9 @@ namespace RoslynQuoter
                 return methodCall.Arguments.Select(a => InterpretApiCall((ApiCall)a)).ToArray();
             }
 
-            if (instance is CompilationUnitSyntax compilationUnit && name == "NormalizeWhitespace")
+            if (instance is SyntaxNode n && name == "NormalizeWhitespace")
             {
-                return compilationUnit.NormalizeWhitespace();
+                return n.NormalizeWhitespace();
             }
 
             string genericArgument;
@@ -1555,13 +1555,53 @@ If the first parameter is of type SyntaxKind, please add an exception for this n
                 {
                     return (ParseStringLiteral(str), true);
                 }
-                else if (parameterType == typeof(int) && int.TryParse(str, out int int32))
+                else if (parameterType == typeof(int))
                 {
-                    return (int32, true);
+                    if (str.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                    {
+                        str = str.Remove(0, 2);
+                    }
+
+                    if (int.TryParse(str, out var int32))
+                    {
+                        return (int32, true);
+                    }
                 }
-                else if (parameterType == typeof(double) && double.TryParse(str, out double dbl))
+                else if (parameterType == typeof(double))
                 {
-                    return (dbl, true);
+                    if (str.EndsWith("d", StringComparison.OrdinalIgnoreCase))
+                    {
+                        str = str.Substring(0, str.Length - 1);
+                    }
+
+                    if (double.TryParse(str, out var dbl))
+                    {
+                        return (dbl, true);
+                    }
+                }
+                else if (parameterType == typeof(float))
+                {
+                    if (str.EndsWith("f", StringComparison.OrdinalIgnoreCase))
+                    {
+                        str = str.Substring(0, str.Length - 1);
+                    }
+
+                    if (float.TryParse(str, out var fl))
+                    {
+                        return (fl, true);
+                    }
+                }
+                else if (parameterType == typeof(decimal))
+                {
+                    if (str.EndsWith("m", StringComparison.OrdinalIgnoreCase))
+                    {
+                        str = str.Substring(0, str.Length - 1);
+                    }
+
+                    if (decimal.TryParse(str, out var d))
+                    {
+                        return (d, true);
+                    }
                 }
                 else if (parameterType == typeof(char) && str.StartsWith("'") && str.EndsWith("'") && char.TryParse(str.Trim('\''), out char ch))
                 {
@@ -1576,6 +1616,45 @@ If the first parameter is of type SyntaxKind, please add an exception for this n
                     else if (str == "false")
                     {
                         return (false, true);
+                    }
+                }
+                else if (
+                    parameterType == typeof(uint) ||
+                    parameterType == typeof(ulong) ||
+                    parameterType == typeof(long))
+                {
+                    if (str.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                    {
+                        str = str.Remove(0, 2);
+                    }
+
+                    if (str.EndsWith("lu", StringComparison.OrdinalIgnoreCase) ||
+                        str.EndsWith("ul", StringComparison.OrdinalIgnoreCase))
+                    {
+                        str = str.Substring(0, str.Length - 2);
+                    }
+                    else if (str.EndsWith("u", StringComparison.OrdinalIgnoreCase))
+                    {
+                        str = str.Substring(0, str.Length - 1);
+                    }
+                    else if (str.EndsWith("l", StringComparison.OrdinalIgnoreCase))
+                    {
+                        str = str.Substring(0, str.Length - 1);
+                    }
+
+                    if (uint.TryParse(str, out var ui))
+                    {
+                        return (ui, true);
+                    }
+
+                    if (ulong.TryParse(str, out var ul))
+                    {
+                        return (ul, true);
+                    }
+
+                    if (long.TryParse(str, out var l))
+                    {
+                        return (l, true);
                     }
                 }
             }

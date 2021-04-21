@@ -324,7 +324,7 @@ class Program
     }
 
     [Fact]
-    public void Roundtrip6()
+    public void RoundtripBoolLiteral()
     {
         Test(@"class C { bool b = true; }");
     }
@@ -571,7 +571,11 @@ class C { }");
     [Fact]
     public void TestIssue49()
     {
-        Test(@"if () {}", "Parse error. Have you selected the right Parse As context?", nodeKind: NodeKind.MemberDeclaration);
+        Test(
+          @"if () {}",
+          "Parse error. Have you selected the right Parse As context?",
+          nodeKind: NodeKind.MemberDeclaration,
+          testRoundtrip: false);
     }
 
     [Fact]
@@ -588,13 +592,107 @@ var @class = 12;
 Console.WriteLine(nameof(@class));");
     }
 
+    [Fact]
+    public void TestFloatLiteral()
+    {
+        Test("1F", @"SyntaxFactory.LiteralExpression(
+    SyntaxKind.NumericLiteralExpression,
+    SyntaxFactory.Literal(1F))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression);
+    }
+
+    [Fact]
+    public void TestDoubleLiteral()
+    {
+        Test("1D", @"SyntaxFactory.LiteralExpression(
+    SyntaxKind.NumericLiteralExpression,
+    SyntaxFactory.Literal(1D))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression,
+        testRoundtrip: false // 1D gets erased to just 1 when we interpret the syntax factory calls
+        );
+    }
+
+    [Fact]
+    public void TestDecimalLiteral()
+    {
+        Test("1m", @"SyntaxFactory.LiteralExpression(
+    SyntaxKind.NumericLiteralExpression,
+    SyntaxFactory.Literal(1m))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression,
+        testRoundtrip: false // 1m gets converted to 1M during roundtrip
+        );
+    }
+
+    [Fact]
+    public void TestUnsignedLiteral()
+    {
+        Test("1u", @"SyntaxFactory.LiteralExpression(
+    SyntaxKind.NumericLiteralExpression,
+    SyntaxFactory.Literal(1u))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression,
+        testRoundtrip: false // 1u gets converted to 1L during roundtrip
+        );
+
+        Test("0x1u", @"SyntaxFactory.LiteralExpression(
+    SyntaxKind.NumericLiteralExpression,
+    SyntaxFactory.Literal(0x1u))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression,
+        testRoundtrip: false
+        );
+    }
+
+    [Fact]
+    public void TestLongLiteral()
+    {
+        Test("1l", @"SyntaxFactory.LiteralExpression(
+    SyntaxKind.NumericLiteralExpression,
+    SyntaxFactory.Literal(1l))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression,
+        testRoundtrip: false // 1l gets converted to 1L during roundtrip
+        );
+
+        Test("0x1L", @"SyntaxFactory.LiteralExpression(
+    SyntaxKind.NumericLiteralExpression,
+    SyntaxFactory.Literal(0x1L))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression,
+        testRoundtrip: false
+        );
+    }
+
+    [Theory]
+    [InlineData("ul")]
+    [InlineData("uL")]
+    [InlineData("Ul")]
+    [InlineData("UL")]
+    [InlineData("lu")]
+    [InlineData("lU")]
+    [InlineData("Lu")]
+    [InlineData("LU")]
+    public void TestUnsignedLongLiteral(string suffix)
+    {
+        Test("1" + suffix, $@"SyntaxFactory.LiteralExpression(
+    SyntaxKind.NumericLiteralExpression,
+    SyntaxFactory.Literal(1{suffix}))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression,
+        testRoundtrip: false
+        );
+
+        Test("0x2" + suffix, $@"SyntaxFactory.LiteralExpression(
+    SyntaxKind.NumericLiteralExpression,
+    SyntaxFactory.Literal(0x2{suffix}))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression,
+        testRoundtrip: false
+        );
+    }
+
     private void Test(
         string sourceText,
         string expected,
         bool useDefaultFormatting = true,
         bool removeRedundantModifyingCalls = true,
         bool shortenCodeWithUsingStatic = false,
-        NodeKind nodeKind = NodeKind.CompilationUnit)
+        NodeKind nodeKind = NodeKind.CompilationUnit,
+        bool testRoundtrip = true)
     {
         var quoter = new Quoter
         {
@@ -605,16 +703,24 @@ Console.WriteLine(nameof(@class));");
         var actual = quoter.QuoteText(sourceText, nodeKind);
         Assert.Equal(expected, actual);
 
-        Test(sourceText);
+        if (testRoundtrip)
+        {
+            Test(sourceText, nodeKind);
+        }
     }
 
-    private void Test(string sourceText)
+    private void Test(string sourceText, NodeKind nodeKind = NodeKind.CompilationUnit)
     {
-        Test(sourceText, useDefaultFormatting: true, removeRedundantCalls: true, shortenCodeWithUsingStatic: false);
-        Test(sourceText, useDefaultFormatting: false, removeRedundantCalls: true, shortenCodeWithUsingStatic: true);
+        Test(sourceText, useDefaultFormatting: true, removeRedundantCalls: true, shortenCodeWithUsingStatic: false, nodeKind);
+        Test(sourceText, useDefaultFormatting: false, removeRedundantCalls: true, shortenCodeWithUsingStatic: true, nodeKind);
     }
 
-    private static void Test(string sourceText, bool useDefaultFormatting, bool removeRedundantCalls, bool shortenCodeWithUsingStatic)
+    private static void Test(
+      string sourceText,
+      bool useDefaultFormatting,
+      bool removeRedundantCalls,
+      bool shortenCodeWithUsingStatic,
+      NodeKind nodeKind = NodeKind.CompilationUnit)
     {
         if (useDefaultFormatting)
         {
@@ -628,9 +734,9 @@ Console.WriteLine(nameof(@class));");
         var quoter = new Quoter
         {
             UseDefaultFormatting = useDefaultFormatting,
-            RemoveRedundantModifyingCalls = removeRedundantCalls
+            RemoveRedundantModifyingCalls = removeRedundantCalls,
         };
-        var generatedCode = quoter.Quote(sourceText);
+        var generatedCode = quoter.Quote(sourceText, nodeKind);
 
         var resultText = quoter.Evaluate(generatedCode);
 
