@@ -114,8 +114,12 @@ namespace RoslynQuoter
         {
             switch (nodeKind)
             {
+                case NodeKind.Script:
+                    return SyntaxFactory.ParseCompilationUnit(sourceText,
+                        options: new CSharpParseOptions(LanguageVersion.Preview, kind: SourceCodeKind.Script));
                 case NodeKind.CompilationUnit:
-                    return SyntaxFactory.ParseCompilationUnit(sourceText, options: new CSharpParseOptions(LanguageVersion.Preview));
+                    return SyntaxFactory.ParseCompilationUnit(sourceText,
+                        options: new CSharpParseOptions(LanguageVersion.Preview, kind: SourceCodeKind.Regular));
                 case NodeKind.MemberDeclaration:
                     return SyntaxFactory.ParseMemberDeclaration(sourceText);
                 case NodeKind.Statement:
@@ -2023,6 +2027,7 @@ If the first parameter is of type SyntaxKind, please add an exception for this n
     public enum NodeKind
     {
         CompilationUnit,
+        Script,
         MemberDeclaration,
         Statement,
         Expression
