@@ -9,6 +9,26 @@ using Xunit;
 public class Tests
 {
     [Fact]
+    public void TestInterpolatedStringWithNewLine()
+    {
+        var expected = $@"InterpolatedStringExpression(
+    Token(SyntaxKind.InterpolatedStringStartToken))
+.WithContents(
+    SingletonList<InterpolatedStringContentSyntax>(
+        InterpolatedStringText()
+        .WithTextToken(
+            Token(
+                TriviaList(),
+                SyntaxKind.InterpolatedStringTextToken,
+                ""Foo \\n!"",
+                @""Foo {"\n"}!"",
+                TriviaList()))))
+.NormalizeWhitespace()";
+        
+        Test("$\"Foo \\n!\"", expected, shortenCodeWithUsingStatic: true, nodeKind: NodeKind.Expression);
+    }
+
+    [Fact]
     public void TestUsingSystemWithRedundantCalls()
     {
         Test(@"using System;
