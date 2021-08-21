@@ -436,6 +436,9 @@ namespace RoslynQuoter
                 else if (SyntaxFacts.GetContextualKeywordKind(tokenValueText) is var contextualKeyWord
                     && contextualKeyWord != SyntaxKind.None)
                 {
+                    leading = leading ?? GetEmptyTrivia("LeadingTrivia");
+                    trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
+
                     arguments.Add(leading);
                     arguments.Add(contextualKeyWord);
                     arguments.Add(escapedTokenText);
