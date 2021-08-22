@@ -408,6 +408,7 @@ namespace RoslynQuoter
                 tokenText.Contains("\r") ||
                 tokenText.Contains("\n");
             string escapedTokenText = EscapeAndQuote(tokenText, verbatim);
+            string escapedTokenValueText = EscapeAndQuote(tokenValueText);
             object leading = GetLeadingTrivia(token);
             object trailing = GetTrailingTrivia(token);
 
@@ -429,7 +430,7 @@ namespace RoslynQuoter
                     arguments.Add(leading);
                     arguments.Add(tokenKind);
                     arguments.Add(escapedTokenText);
-                    arguments.Add(EscapeAndQuote(tokenValueText));
+                    arguments.Add(escapedTokenValueText);
                     arguments.Add(trailing);
                 }
                 else if (SyntaxFacts.GetContextualKeywordKind(tokenValueText) is var contextualKeyWord
@@ -441,7 +442,7 @@ namespace RoslynQuoter
                     arguments.Add(leading);
                     arguments.Add(contextualKeyWord);
                     arguments.Add(escapedTokenText);
-                    arguments.Add(escapedTokenText);
+                    arguments.Add(escapedTokenValueText);
                     arguments.Add(trailing);
                 }
                 else
@@ -458,7 +459,7 @@ namespace RoslynQuoter
                 AddIfNotNull(arguments, leading);
                 arguments.Add(tokenKind);
                 arguments.Add(escapedTokenText);
-                arguments.Add(escapedTokenText);
+                arguments.Add(escapedTokenValueText);
                 AddIfNotNull(arguments, trailing);
             }
             else if ((tokenKind == SyntaxKind.XmlTextLiteralToken ||
@@ -474,10 +475,9 @@ namespace RoslynQuoter
                 {
                     methodName = SyntaxFactoryMethod("XmlEntity");
                 }
-
                 arguments.Add(leading ?? GetEmptyTrivia("LeadingTrivia"));
                 arguments.Add(escapedTokenText);
-                arguments.Add(escapedTokenText);
+                arguments.Add(escapedTokenValueText);
                 arguments.Add(trailing ?? GetEmptyTrivia("TrailingTrivia"));
             }
             else if ((token.Parent is LiteralExpressionSyntax ||
