@@ -112,6 +112,7 @@ namespace RoslynQuoter
         /// <param name="nodeKind">What kind of C# syntax node should the input be parsed as</param>
         private static SyntaxNode Parse(string sourceText, NodeKind nodeKind)
         {
+            var regularParseOptions = new CSharpParseOptions(LanguageVersion.Preview, kind: SourceCodeKind.Regular);
             switch (nodeKind)
             {
                 case NodeKind.Script:
@@ -119,13 +120,13 @@ namespace RoslynQuoter
                         options: new CSharpParseOptions(LanguageVersion.Preview, kind: SourceCodeKind.Script));
                 case NodeKind.CompilationUnit:
                     return SyntaxFactory.ParseCompilationUnit(sourceText,
-                        options: new CSharpParseOptions(LanguageVersion.Preview, kind: SourceCodeKind.Regular));
+                        options: regularParseOptions);
                 case NodeKind.MemberDeclaration:
-                    return SyntaxFactory.ParseMemberDeclaration(sourceText);
+                    return SyntaxFactory.ParseMemberDeclaration(sourceText, options: regularParseOptions);
                 case NodeKind.Statement:
-                    return SyntaxFactory.ParseStatement(sourceText);
+                    return SyntaxFactory.ParseStatement(sourceText, options: regularParseOptions);
                 case NodeKind.Expression:
-                    return SyntaxFactory.ParseExpression(sourceText);
+                    return SyntaxFactory.ParseExpression(sourceText, options: regularParseOptions);
                 default:
                     throw new InvalidOperationException();
             }

@@ -413,6 +413,12 @@ int i
         Test(@"class C { void M() { a ? b : c; } }");
     }
 
+    [Fact]
+    public void NotPattern()
+    {
+        Test("x is not null", nodeKind: NodeKind.Expression);
+    }
+
     private static string GetPath(string relativePath)
     {
         if (Path.IsPathRooted(relativePath))
