@@ -404,12 +404,22 @@ namespace RoslynQuoter
 
             var arguments = new List<object>();
             string methodName = SyntaxFactoryMethod("Token");
-            bool verbatim =
-                tokenText.StartsWith("@") ||
+
+            bool verbatimText =
+                (tokenKind == SyntaxKind.StringLiteralToken ||
+                 tokenKind == SyntaxKind.InterpolatedStringTextToken) &&
+                (tokenText.StartsWith("@") ||
+                tokenText.StartsWith("$@") ||
                 tokenText.Contains("\r") ||
-                tokenText.Contains("\n");
-            string escapedTokenText = EscapeAndQuote(tokenText, verbatim);
-            string escapedTokenValueText = EscapeAndQuote(tokenValueText);
+                tokenText.Contains("\n"));
+            bool verbatimLiteralText =
+                (tokenKind == SyntaxKind.StringLiteralToken ||
+                 tokenKind == SyntaxKind.InterpolatedStringTextToken) &&
+                (tokenValueText.Contains("\r") ||
+                 tokenValueText.Contains("\n"));
+
+            string escapedTokenText = EscapeAndQuote(tokenText, verbatimText);
+            string escapedTokenValueText = EscapeAndQuote(tokenValueText, verbatimLiteralText);
             object leading = GetLeadingTrivia(token);
             object trailing = GetTrailingTrivia(token);
 
@@ -423,7 +433,7 @@ namespace RoslynQuoter
             {
                 methodName = SyntaxFactoryMethod("Identifier");
 
-                if (verbatim)
+                if (verbatimText)
                 {
                     leading = leading ?? GetEmptyTrivia("LeadingTrivia");
                     trailing = trailing ?? GetEmptyTrivia("TrailingTrivia");
@@ -481,15 +491,9 @@ namespace RoslynQuoter
                 arguments.Add(escapedTokenValueText);
                 arguments.Add(trailing ?? GetEmptyTrivia("TrailingTrivia"));
             }
-            else if ((token.Parent is LiteralExpressionSyntax ||
+            else if ((tokenKind == SyntaxKind.CharacterLiteralToken ||
                 tokenKind == SyntaxKind.StringLiteralToken ||
-                tokenKind == SyntaxKind.NumericLiteralToken) &&
-                tokenKind != SyntaxKind.TrueKeyword &&
-                tokenKind != SyntaxKind.FalseKeyword &&
-                tokenKind != SyntaxKind.NullKeyword &&
-                tokenKind != SyntaxKind.ArgListKeyword &&
-                tokenKind != SyntaxKind.DefaultKeyword &&
-                !tokenIsMissing)
+                tokenKind == SyntaxKind.NumericLiteralToken) && !tokenIsMissing)
             {
                 methodName = SyntaxFactoryMethod("Literal");
                 bool shouldAddTrivia = leading != null || trailing != null;
@@ -498,26 +502,37 @@ namespace RoslynQuoter
                     arguments.Add(leading ?? GetEmptyTrivia("LeadingTrivia"));
                 }
 
-                string escapedText = EscapeAndQuote(tokenText);
-                string escapedValue = EscapeAndQuote(tokenValueText);
+                bool needsFullOverload = shouldAddTrivia;
+
+                string simpleOverloadText = tokenKind switch
+                {
+                    SyntaxKind.StringLiteralToken => SyntaxFactory.Literal((string)token.Value).ToString(),
+                    SyntaxKind.CharacterLiteralToken => SyntaxFactory.Literal((char)token.Value).ToString(),
+                    _ => token.ToString()
+                };
+                if (token.ToString() != simpleOverloadText.ToString())
+                {
+                    needsFullOverload = true;
+                }
 
                 if (tokenKind == SyntaxKind.CharacterLiteralToken)
                 {
-                    escapedValue = EscapeAndQuote(tokenValueText, "'");
+                    escapedTokenValueText = EscapeAndQuote(tokenValueText, verbatim: false, "'");
                 }
-                else if (tokenKind != SyntaxKind.StringLiteralToken)
+                else if (tokenKind == SyntaxKind.NumericLiteralToken)
                 {
-                    escapedValue = tokenText;
+                    escapedTokenValueText = tokenText;
                 }
 
-                if (shouldAddTrivia ||
-                    (tokenKind == SyntaxKind.StringLiteralToken &&
-                    token.ToString() != SyntaxFactory.Literal(tokenValueText).ToString()))
+                if (needsFullOverload)
                 {
-                    arguments.Add(escapedText);
+                    arguments.Add(escapedTokenText);
+                    arguments.Add(escapedTokenValueText);
                 }
-
-                arguments.Add(escapedValue);
+                else
+                {
+                    arguments.Add(tokenText);
+                }
 
                 if (shouldAddTrivia)
                 {
@@ -782,64 +797,43 @@ namespace RoslynQuoter
         /// <summary>
         /// Escapes strings to be included within "" using C# escaping rules
         /// </summary>
-        public static string Escape(string text, bool escapeVerbatim = false)
+        public static string Escape(string text, bool escapeVerbatim = false, string quoteChar = "\"")
         {
-            var sb = new StringBuilder();
-            for (int i = 0; i < text.Length; i++)
+            if (text.Length == 1 && quoteChar == "'")
             {
-                string toAppend = text[i].ToString();
-                if (text[i] == '"')
-                {
-                    if (escapeVerbatim)
-                    {
-                        toAppend = "\"\"";
-                    }
-                    else
-                    {
-                        toAppend = "\\\"";
-                    }
-                }
-                else if (text[i] == '\\' && !escapeVerbatim)
-                {
-                    toAppend = "\\\\";
-                }
-
-                sb.Append(toAppend);
+                var charLiteralToken = SyntaxFactory.Literal(text[0]);
+                var escapedChar = charLiteralToken.Text;
+                escapedChar = escapedChar.Substring(1, escapedChar.Length - 2);
+                return escapedChar;
             }
 
-            return sb.ToString();
-        }
+            var literalToken = SyntaxFactory.Literal(text);
+            var escaped = literalToken.Text;
+            escaped = escaped.Substring(1, escaped.Length - 2);
 
-        public static string EscapeAndQuote(string text, string quoteChar = "\"")
-        {
-            bool verbatim = text.Contains("\n") || text.Contains("\r");
-            return EscapeAndQuote(text, verbatim, quoteChar);
+            if (escapeVerbatim)
+            {
+                escaped = escaped.Replace("\\\"", "\"\"");
+                escaped = escaped.Replace("\\r\\n", "\r\n");
+                escaped = escaped.Replace("\\n", "\n");
+            }
+
+            return escaped;
         }
 
         public static string ParseStringLiteral(string text)
-        {
-            bool verbatim = false;
-            if (text.StartsWith("@"))
-            {
-                text = text.Substring(1);
-                verbatim = true;
-            }
-
-            if (text.StartsWith("\"") && text.EndsWith("\""))
-            {
-                text = text.Substring(1, text.Length - 2);
-            }
-
-            text = Unescape(text, verbatim);
-            return text;
-        }
-
-        public static string Unescape(string text, bool verbatim)
         {
             if (text == "Environment.NewLine")
             {
                 return Environment.NewLine;
             }
+
+            var token = SyntaxFactory.ParseToken(text);
+            return token.ValueText;
+        }
+
+        public static string Unescape(string text, bool verbatim)
+        {
 
             if (verbatim)
             {
@@ -901,12 +895,7 @@ namespace RoslynQuoter
                 return "Environment.NewLine";
             }
 
-            if (text == "\n")
-            {
-                return "\"\\n\"";
-            }
-
-            text = Escape(text, verbatim);
+            text = Escape(text, verbatim, quoteChar);
             text = SurroundWithQuotes(text, quoteChar);
             if (verbatim)
             {
@@ -1608,9 +1597,13 @@ If the first parameter is of type SyntaxKind, please add an exception for this n
                         return (d, true);
                     }
                 }
-                else if (parameterType == typeof(char) && str.StartsWith("'") && str.EndsWith("'") && char.TryParse(str.Trim('\''), out char ch))
+                else if (parameterType == typeof(char))
                 {
-                    return (ch, true);
+                    var token = SyntaxFactory.ParseToken(str);
+                    if (token.IsKind(SyntaxKind.CharacterLiteralToken))
+                    {
+                        return (token.Value, true);
+                    }
                 }
                 else if (parameterType == typeof(bool))
                 {

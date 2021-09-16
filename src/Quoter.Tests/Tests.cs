@@ -24,7 +24,7 @@ public class Tests
                 @""Foo {"\n"}!"",
                 TriviaList()))))
 .NormalizeWhitespace()";
-        
+
         Test("$\"Foo \\n!\"", expected, shortenCodeWithUsingStatic: true, nodeKind: NodeKind.Expression);
     }
 
@@ -299,6 +299,56 @@ namespace N
         Test("class C { char c = 'z'; }");
     }
 
+    [Theory]
+    [InlineData("'")]
+    [InlineData("0")]
+    [InlineData("a")]
+    [InlineData("b")]
+    [InlineData("f")]
+    [InlineData("n")]
+    [InlineData("r")]
+    [InlineData("t")]
+    [InlineData("v")]
+    public void TestEscapedCharLiterals(string ch)
+    {
+        Test($"'\\{ch}'", $@"SyntaxFactory.LiteralExpression(
+    SyntaxKind.CharacterLiteralExpression,
+    SyntaxFactory.Literal('\{ch}'))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression);
+    }
+
+    [Theory]
+    [InlineData("u1234", "ሴ")]
+    [InlineData("x123a", "ሺ")]
+    [InlineData("U00001234", "ሴ")]
+    public void TestEscapedCharLiterals2(string ch, string charValue)
+    {
+        Test($"'\\{ch}'", $@"SyntaxFactory.LiteralExpression(
+    SyntaxKind.CharacterLiteralExpression,
+    SyntaxFactory.Literal(
+        ""'\\{ch}'"",
+        '{charValue}'))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression);
+    }
+
+    [Fact]
+    public void TestEscapedCharLiterals3()
+    {
+        Test("'\"'", $@"SyntaxFactory.LiteralExpression(
+    SyntaxKind.CharacterLiteralExpression,
+    SyntaxFactory.Literal('""'))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression);
+    }
+
+    [Fact]
+    public void TestEscapedCharLiterals4()
+    {
+        Test("'\\\\'", $@"SyntaxFactory.LiteralExpression(
+    SyntaxKind.CharacterLiteralExpression,
+    SyntaxFactory.Literal('\\'))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression);
+    }
+
     [Fact]
     public void TestTrueFalseAndNull()
     {
@@ -452,6 +502,16 @@ int i
     public void Roundtrip21()
     {
         Test("#line 1 \"a\\\b\"");
+    }
+
+    [Fact]
+    public void Roundtrip21_1()
+    {
+        Test("\"\b\"", nodeKind: NodeKind.Expression);
+        Test(" \"\b\"", nodeKind: NodeKind.Expression);
+        Test("\"\b\" ", nodeKind: NodeKind.Expression);
+        Test(" \"\b\" ", nodeKind: NodeKind.Expression);
+        Test("\"a\\\b\"", nodeKind: NodeKind.Expression);
     }
 
     [Fact]
@@ -761,6 +821,7 @@ Console.WriteLine(nameof(@class));");
         {
             UseDefaultFormatting = useDefaultFormatting,
             RemoveRedundantModifyingCalls = removeRedundantCalls,
+            ShortenCodeWithUsingStatic = shortenCodeWithUsingStatic
         };
         var generatedCode = quoter.Quote(sourceText, nodeKind);
 
