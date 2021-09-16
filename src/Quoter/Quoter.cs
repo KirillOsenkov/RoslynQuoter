@@ -807,15 +807,17 @@ namespace RoslynQuoter
                 return escapedChar;
             }
 
-            var literalToken = SyntaxFactory.Literal(text);
-            var escaped = literalToken.Text;
-            escaped = escaped.Substring(1, escaped.Length - 2);
+            string escaped = text;
 
             if (escapeVerbatim)
             {
-                escaped = escaped.Replace("\\\"", "\"\"");
-                escaped = escaped.Replace("\\r\\n", "\r\n");
-                escaped = escaped.Replace("\\n", "\n");
+                escaped = escaped.Replace("\"", "\"\"");
+            }
+            else
+            {
+                var literalToken = SyntaxFactory.Literal(escaped);
+                escaped = literalToken.Text;
+                escaped = escaped.Substring(1, escaped.Length - 2);
             }
 
             return escaped;

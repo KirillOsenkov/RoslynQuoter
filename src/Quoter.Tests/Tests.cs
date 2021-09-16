@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using RoslynQuoter;
 using Xunit;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 public class Tests
 {
@@ -347,6 +348,18 @@ namespace N
     SyntaxKind.CharacterLiteralExpression,
     SyntaxFactory.Literal('\\'))
 .NormalizeWhitespace()", nodeKind: NodeKind.Expression);
+    }
+
+    [Fact]
+    public void TestEscapedChar5()
+    {
+        Test("\"@abc\\rdef\"", nodeKind: NodeKind.Expression);
+    }
+
+    [Fact]
+    public void TestEscapedChar6()
+    {
+        Test("@\"\\n\"", nodeKind: NodeKind.Expression);
     }
 
     [Fact]
