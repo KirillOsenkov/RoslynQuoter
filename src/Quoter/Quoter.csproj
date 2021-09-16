@@ -5,6 +5,7 @@
     <OutputType>Library</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
     <DebugType>embedded</DebugType>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>
