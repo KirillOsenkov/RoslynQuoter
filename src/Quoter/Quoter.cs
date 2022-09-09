@@ -836,7 +836,6 @@ namespace RoslynQuoter
 
         public static string Unescape(string text, bool verbatim)
         {
-
             if (verbatim)
             {
                 return text.Replace("\"\"", "\"");
