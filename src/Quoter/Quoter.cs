@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -508,9 +509,10 @@ namespace RoslynQuoter
                 {
                     SyntaxKind.StringLiteralToken => SyntaxFactory.Literal((string)token.Value).ToString(),
                     SyntaxKind.CharacterLiteralToken => SyntaxFactory.Literal((char)token.Value).ToString(),
+                    SyntaxKind.NumericLiteralToken => GetNumericLiteralText(token.Value),
                     _ => token.ToString()
                 };
-                if (token.ToString() != simpleOverloadText.ToString())
+                if (token.ToString() != simpleOverloadText)
                 {
                     needsFullOverload = true;
                 }
@@ -566,6 +568,28 @@ namespace RoslynQuoter
             }
 
             return new ApiCall(name, methodName, arguments);
+        }
+
+        private static string GetNumericLiteralText(object value)
+        {
+            SyntaxToken token = value switch
+            {
+                int int32 => SyntaxFactory.Literal(int32),
+                uint uint32 => SyntaxFactory.Literal(uint32),
+                long int64 => SyntaxFactory.Literal(int64),
+                ulong uint64 => SyntaxFactory.Literal(uint64),
+                float single => SyntaxFactory.Literal(single),
+                double double8 => SyntaxFactory.Literal(double8),
+                decimal d => SyntaxFactory.Literal(d),
+                _ => default
+            };
+
+            if (token == default)
+            {
+                return null;
+            }
+
+            return token.ToString();
         }
 
         private static void AddIfNotNull(List<object> arguments, object value)
@@ -825,11 +849,6 @@ namespace RoslynQuoter
 
         public static string ParseStringLiteral(string text)
         {
-            if (text == "Environment.NewLine")
-            {
-                return Environment.NewLine;
-            }
-
             var token = SyntaxFactory.ParseToken(text);
             return token.ValueText;
         }
@@ -1548,6 +1567,22 @@ If the first parameter is of type SyntaxKind, please add an exception for this n
             {
                 if (parameterType == typeof(string))
                 {
+                    if (str == "null")
+                    {
+                        return (null, true);
+                    }
+
+                    if (str == "Environment.NewLine")
+                    {
+                        return (Environment.NewLine, true);
+                    }
+
+                    // a non-null string literal needs to contain the quote
+                    if (!str.Contains("\""))
+                    {
+                        return (argument, false);
+                    }
+
                     return (ParseStringLiteral(str), true);
                 }
                 else if (parameterType == typeof(int))
@@ -1622,15 +1657,21 @@ If the first parameter is of type SyntaxKind, please add an exception for this n
                     parameterType == typeof(ulong) ||
                     parameterType == typeof(long))
                 {
+                    NumberStyles numberStyles = NumberStyles.Integer;
                     if (str.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
                     {
                         str = str.Remove(0, 2);
+                        numberStyles = NumberStyles.HexNumber;
                     }
 
                     if (str.EndsWith("lu", StringComparison.OrdinalIgnoreCase) ||
                         str.EndsWith("ul", StringComparison.OrdinalIgnoreCase))
                     {
                         str = str.Substring(0, str.Length - 2);
+                        if (parameterType != typeof(ulong))
+                        {
+                            return (argument, false);
+                        }
                     }
                     else if (str.EndsWith("u", StringComparison.OrdinalIgnoreCase))
                     {
@@ -1639,19 +1680,26 @@ If the first parameter is of type SyntaxKind, please add an exception for this n
                     else if (str.EndsWith("l", StringComparison.OrdinalIgnoreCase))
                     {
                         str = str.Substring(0, str.Length - 1);
+                        if (parameterType != typeof(long))
+                        {
+                            return (argument, false);
+                        }
                     }
 
-                    if (uint.TryParse(str, out var ui))
+                    if (parameterType == typeof(uint) &&
+                        uint.TryParse(str, numberStyles, null, out var ui))
                     {
                         return (ui, true);
                     }
 
-                    if (ulong.TryParse(str, out var ul))
+                    if (parameterType == typeof(ulong) &&
+                        ulong.TryParse(str, numberStyles, null, out var ul))
                     {
                         return (ul, true);
                     }
 
-                    if (long.TryParse(str, out var l))
+                    if (parameterType == typeof(long) &&
+                        long.TryParse(str, numberStyles, null, out var l))
                     {
                         return (l, true);
                     }

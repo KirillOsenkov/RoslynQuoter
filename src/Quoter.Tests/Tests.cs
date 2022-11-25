@@ -705,20 +705,44 @@ Console.WriteLine(nameof(@class));");
     {
         Test("1D", @"SyntaxFactory.LiteralExpression(
     SyntaxKind.NumericLiteralExpression,
-    SyntaxFactory.Literal(1D))
-.NormalizeWhitespace()", nodeKind: NodeKind.Expression,
-        testRoundtrip: false // 1D gets erased to just 1 when we interpret the syntax factory calls
+    SyntaxFactory.Literal(
+        ""1D"",
+        1D))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression
+        );
+    }
+
+    [Fact]
+    public void TestDoubleLiteralSmall()
+    {
+        Test("1d", @"SyntaxFactory.LiteralExpression(
+    SyntaxKind.NumericLiteralExpression,
+    SyntaxFactory.Literal(
+        ""1d"",
+        1d))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression
         );
     }
 
     [Fact]
     public void TestDecimalLiteral()
     {
+        Test("1M", @"SyntaxFactory.LiteralExpression(
+    SyntaxKind.NumericLiteralExpression,
+    SyntaxFactory.Literal(1M))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression
+        );
+    }
+
+    [Fact]
+    public void TestDecimalLiteralSmall()
+    {
         Test("1m", @"SyntaxFactory.LiteralExpression(
     SyntaxKind.NumericLiteralExpression,
-    SyntaxFactory.Literal(1m))
-.NormalizeWhitespace()", nodeKind: NodeKind.Expression,
-        testRoundtrip: false // 1m gets converted to 1M during roundtrip
+    SyntaxFactory.Literal(
+        ""1m"",
+        1m))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression
         );
     }
 
@@ -727,16 +751,18 @@ Console.WriteLine(nameof(@class));");
     {
         Test("1u", @"SyntaxFactory.LiteralExpression(
     SyntaxKind.NumericLiteralExpression,
-    SyntaxFactory.Literal(1u))
-.NormalizeWhitespace()", nodeKind: NodeKind.Expression,
-        testRoundtrip: false // 1u gets converted to 1L during roundtrip
+    SyntaxFactory.Literal(
+        ""1u"",
+        1u))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression
         );
 
         Test("0x1u", @"SyntaxFactory.LiteralExpression(
     SyntaxKind.NumericLiteralExpression,
-    SyntaxFactory.Literal(0x1u))
-.NormalizeWhitespace()", nodeKind: NodeKind.Expression,
-        testRoundtrip: false
+    SyntaxFactory.Literal(
+        ""0x1u"",
+        0x1u))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression
         );
     }
 
@@ -745,16 +771,18 @@ Console.WriteLine(nameof(@class));");
     {
         Test("1l", @"SyntaxFactory.LiteralExpression(
     SyntaxKind.NumericLiteralExpression,
-    SyntaxFactory.Literal(1l))
-.NormalizeWhitespace()", nodeKind: NodeKind.Expression,
-        testRoundtrip: false // 1l gets converted to 1L during roundtrip
+    SyntaxFactory.Literal(
+        ""1l"",
+        1l))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression
         );
 
         Test("0x1L", @"SyntaxFactory.LiteralExpression(
     SyntaxKind.NumericLiteralExpression,
-    SyntaxFactory.Literal(0x1L))
-.NormalizeWhitespace()", nodeKind: NodeKind.Expression,
-        testRoundtrip: false
+    SyntaxFactory.Literal(
+        ""0x1L"",
+        0x1L))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression
         );
     }
 
@@ -762,7 +790,6 @@ Console.WriteLine(nameof(@class));");
     [InlineData("ul")]
     [InlineData("uL")]
     [InlineData("Ul")]
-    [InlineData("UL")]
     [InlineData("lu")]
     [InlineData("lU")]
     [InlineData("Lu")]
@@ -771,17 +798,44 @@ Console.WriteLine(nameof(@class));");
     {
         Test("1" + suffix, $@"SyntaxFactory.LiteralExpression(
     SyntaxKind.NumericLiteralExpression,
-    SyntaxFactory.Literal(1{suffix}))
-.NormalizeWhitespace()", nodeKind: NodeKind.Expression,
-        testRoundtrip: false
+    SyntaxFactory.Literal(
+        ""1{suffix}"",
+        1{suffix}))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression
         );
 
         Test("0x2" + suffix, $@"SyntaxFactory.LiteralExpression(
     SyntaxKind.NumericLiteralExpression,
-    SyntaxFactory.Literal(0x2{suffix}))
-.NormalizeWhitespace()", nodeKind: NodeKind.Expression,
-        testRoundtrip: false
+    SyntaxFactory.Literal(
+        ""0x2{suffix}"",
+        0x2{suffix}))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression
         );
+    }
+
+    [Fact]
+    public void TestUL()
+    {
+        const string suffix = "UL";
+        Test("1" + suffix, $@"SyntaxFactory.LiteralExpression(
+    SyntaxKind.NumericLiteralExpression,
+    SyntaxFactory.Literal(1{suffix}))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression
+        );
+
+        Test("0x2" + suffix, $@"SyntaxFactory.LiteralExpression(
+    SyntaxKind.NumericLiteralExpression,
+    SyntaxFactory.Literal(
+        ""0x2{suffix}"",
+        0x2{suffix}))
+.NormalizeWhitespace()", nodeKind: NodeKind.Expression
+        );
+    }
+
+    [Fact]
+    public void TestIssue77()
+    {
+        Test("Foo(0x0000800000000000)", NodeKind.Expression);
     }
 
     private void Test(
