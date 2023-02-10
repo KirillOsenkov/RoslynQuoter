@@ -838,6 +838,12 @@ Console.WriteLine(nameof(@class));");
         Test("Foo(0x0000800000000000)", NodeKind.Expression);
     }
 
+    [Fact]
+    public void TestBinaryLiteral()
+    {
+        Test("0b_0010_1010", NodeKind.Expression);
+    }
+
     private void Test(
         string sourceText,
         string expected,

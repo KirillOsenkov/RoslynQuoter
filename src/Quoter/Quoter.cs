@@ -1565,6 +1565,13 @@ If the first parameter is of type SyntaxKind, please add an exception for this n
             }
             else if (argument is string str)
             {
+                var token = SyntaxFactory.ParseToken(str);
+
+                // WARNING: the order of these checks matters, because
+                // we're effectively emulating overload resolution here.
+                // We have a list of 9 overloads of SyntaxFactory.Literal()
+                // and we need to pick the right overload given the literal
+                // type.
                 if (parameterType == typeof(string))
                 {
                     if (str == "null")
@@ -1583,60 +1590,45 @@ If the first parameter is of type SyntaxKind, please add an exception for this n
                         return (argument, false);
                     }
 
-                    return (ParseStringLiteral(str), true);
-                }
-                else if (parameterType == typeof(int))
-                {
-                    if (str.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                    if (token.IsKind(SyntaxKind.StringLiteralToken) ||
+                        token.IsKind(SyntaxKind.SingleLineRawStringLiteralToken) ||
+                        token.IsKind(SyntaxKind.MultiLineRawStringLiteralToken))
                     {
-                        str = str.Remove(0, 2);
+                        return (token.ValueText, true);
                     }
-
-                    if (int.TryParse(str, out var int32))
+                }
+                else if (
+                    parameterType == typeof(int))
+                {
+                    if (token.IsKind(SyntaxKind.NumericLiteralToken) && token.Value is int)
                     {
-                        return (int32, true);
+                        return (token.Value, true);
                     }
                 }
                 else if (parameterType == typeof(double))
                 {
-                    if (str.EndsWith("d", StringComparison.OrdinalIgnoreCase))
+                    if (token.IsKind(SyntaxKind.NumericLiteralToken) && token.Value is double)
                     {
-                        str = str.Substring(0, str.Length - 1);
-                    }
-
-                    if (double.TryParse(str, out var dbl))
-                    {
-                        return (dbl, true);
+                        return (token.Value, true);
                     }
                 }
                 else if (parameterType == typeof(float))
                 {
-                    if (str.EndsWith("f", StringComparison.OrdinalIgnoreCase))
+                    if (token.IsKind(SyntaxKind.NumericLiteralToken) && token.Value is float)
                     {
-                        str = str.Substring(0, str.Length - 1);
-                    }
-
-                    if (float.TryParse(str, out var fl))
-                    {
-                        return (fl, true);
+                        return (token.Value, true);
                     }
                 }
                 else if (parameterType == typeof(decimal))
                 {
-                    if (str.EndsWith("m", StringComparison.OrdinalIgnoreCase))
+                    if (token.IsKind(SyntaxKind.NumericLiteralToken) && token.Value is decimal)
                     {
-                        str = str.Substring(0, str.Length - 1);
-                    }
-
-                    if (decimal.TryParse(str, out var d))
-                    {
-                        return (d, true);
+                        return (token.Value, true);
                     }
                 }
                 else if (parameterType == typeof(char))
                 {
-                    var token = SyntaxFactory.ParseToken(str);
-                    if (token.IsKind(SyntaxKind.CharacterLiteralToken))
+                    if (token.IsKind(SyntaxKind.CharacterLiteralToken) && token.Value is char)
                     {
                         return (token.Value, true);
                     }
@@ -1652,56 +1644,25 @@ If the first parameter is of type SyntaxKind, please add an exception for this n
                         return (false, true);
                     }
                 }
-                else if (
-                    parameterType == typeof(uint) ||
-                    parameterType == typeof(ulong) ||
-                    parameterType == typeof(long))
+                else if (parameterType == typeof(uint))
                 {
-                    NumberStyles numberStyles = NumberStyles.Integer;
-                    if (str.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                    if (token.IsKind(SyntaxKind.NumericLiteralToken) && token.Value is uint)
                     {
-                        str = str.Remove(0, 2);
-                        numberStyles = NumberStyles.HexNumber;
+                        return (token.Value, true);
                     }
-
-                    if (str.EndsWith("lu", StringComparison.OrdinalIgnoreCase) ||
-                        str.EndsWith("ul", StringComparison.OrdinalIgnoreCase))
+                }
+                else if (parameterType == typeof(ulong))
+                {
+                    if (token.IsKind(SyntaxKind.NumericLiteralToken) && token.Value is ulong)
                     {
-                        str = str.Substring(0, str.Length - 2);
-                        if (parameterType != typeof(ulong))
-                        {
-                            return (argument, false);
-                        }
+                        return (token.Value, true);
                     }
-                    else if (str.EndsWith("u", StringComparison.OrdinalIgnoreCase))
+                }
+                else if (parameterType == typeof(long))
+                {
+                    if (token.IsKind(SyntaxKind.NumericLiteralToken) && token.Value is long)
                     {
-                        str = str.Substring(0, str.Length - 1);
-                    }
-                    else if (str.EndsWith("l", StringComparison.OrdinalIgnoreCase))
-                    {
-                        str = str.Substring(0, str.Length - 1);
-                        if (parameterType != typeof(long))
-                        {
-                            return (argument, false);
-                        }
-                    }
-
-                    if (parameterType == typeof(uint) &&
-                        uint.TryParse(str, numberStyles, null, out var ui))
-                    {
-                        return (ui, true);
-                    }
-
-                    if (parameterType == typeof(ulong) &&
-                        ulong.TryParse(str, numberStyles, null, out var ul))
-                    {
-                        return (ul, true);
-                    }
-
-                    if (parameterType == typeof(long) &&
-                        long.TryParse(str, numberStyles, null, out var l))
-                    {
-                        return (l, true);
+                        return (token.Value, true);
                     }
                 }
             }
