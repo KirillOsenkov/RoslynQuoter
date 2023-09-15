@@ -239,6 +239,7 @@ namespace RoslynQuoter
                 node is CheckedExpressionSyntax ||
                 node is CheckedStatementSyntax ||
                 node is ConstructorInitializerSyntax ||
+                node is DocumentationCommentTriviaSyntax ||
                 node is GotoStatementSyntax ||
                 node is InitializerExpressionSyntax ||
                 node is LiteralExpressionSyntax ||
@@ -246,7 +247,7 @@ namespace RoslynQuoter
                 node is OrderingSyntax ||
                 node is PostfixUnaryExpressionSyntax ||
                 node is PrefixUnaryExpressionSyntax ||
-                node is DocumentationCommentTriviaSyntax ||
+                node is RecordDeclarationSyntax ||
                 node is YieldStatementSyntax)
             {
                 result.Add(new ApiCall("Kind", "SyntaxKind." + node.Kind().ToString()));
@@ -1077,6 +1078,13 @@ namespace RoslynQuoter
                 {
                     minParameterCount = 2;
                 }
+            }
+
+            if (node is RecordDeclarationSyntax)
+            {
+                // for records, pick the overload that specifies the SyntaxKind,
+                // see https://github.com/KirillOsenkov/RoslynQuoter/issues/82
+                minParameterCount = 3;
             }
 
             MethodInfo factory = null;

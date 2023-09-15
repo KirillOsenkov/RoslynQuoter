@@ -848,6 +848,25 @@ Console.WriteLine(nameof(@class));");
         Test("0b_0010_1010", NodeKind.Expression);
     }
 
+    [Fact]
+    public void TestRecordStruct()
+    {
+        Test("record struct A();",
+            @"RecordDeclaration(
+    SyntaxKind.RecordStructDeclaration,
+    Token(SyntaxKind.RecordKeyword),
+    Identifier(""A""))
+.WithClassOrStructKeyword(
+    Token(SyntaxKind.StructKeyword))
+.WithParameterList(
+    ParameterList())
+.WithSemicolonToken(
+    Token(SyntaxKind.SemicolonToken))
+.NormalizeWhitespace()", 
+            shortenCodeWithUsingStatic: true,
+            nodeKind: NodeKind.MemberDeclaration);
+    }
+
     private void Test(
         string sourceText,
         string expected,
