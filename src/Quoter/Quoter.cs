@@ -638,14 +638,14 @@ namespace RoslynQuoter
             string factoryMethodName = SyntaxFactoryMethod("Trivia");
             string text = syntaxTrivia.ToString();
             if (syntaxTrivia.FullSpan.Length == 0 ||
-                (syntaxTrivia.Kind() == SyntaxKind.WhitespaceTrivia && UseDefaultFormatting))
+                (syntaxTrivia.IsKind(SyntaxKind.WhitespaceTrivia) && UseDefaultFormatting))
             {
                 return null;
             }
 
             PropertyInfo triviaFactoryProperty = null;
             if (triviaFactoryProperties.TryGetValue(syntaxTrivia.ToString(), out triviaFactoryProperty) &&
-                ((SyntaxTrivia)triviaFactoryProperty.GetValue(null)).Kind() == syntaxTrivia.Kind())
+                ((SyntaxTrivia)triviaFactoryProperty.GetValue(null)).IsKind(syntaxTrivia.Kind()))
             {
                 if (UseDefaultFormatting)
                 {
@@ -657,7 +657,7 @@ namespace RoslynQuoter
 
             if (!string.IsNullOrEmpty(text) &&
                 string.IsNullOrWhiteSpace(text) &&
-                syntaxTrivia.Kind() == SyntaxKind.WhitespaceTrivia)
+                syntaxTrivia.IsKind(SyntaxKind.WhitespaceTrivia))
             {
                 if (UseDefaultFormatting)
                 {
@@ -667,23 +667,23 @@ namespace RoslynQuoter
                 factoryMethodName = SyntaxFactoryMethod("Whitespace");
             }
 
-            if (syntaxTrivia.Kind() == SyntaxKind.SingleLineCommentTrivia ||
-                syntaxTrivia.Kind() == SyntaxKind.MultiLineCommentTrivia)
+            if (syntaxTrivia.IsKind(SyntaxKind.SingleLineCommentTrivia) ||
+                syntaxTrivia.IsKind(SyntaxKind.MultiLineCommentTrivia))
             {
                 factoryMethodName = SyntaxFactoryMethod("Comment");
             }
 
-            if (syntaxTrivia.Kind() == SyntaxKind.PreprocessingMessageTrivia)
+            if (syntaxTrivia.IsKind(SyntaxKind.PreprocessingMessageTrivia))
             {
                 factoryMethodName = SyntaxFactoryMethod("PreprocessingMessage");
             }
 
-            if (syntaxTrivia.Kind() == SyntaxKind.DisabledTextTrivia)
+            if (syntaxTrivia.IsKind(SyntaxKind.DisabledTextTrivia))
             {
                 factoryMethodName = SyntaxFactoryMethod("DisabledText");
             }
 
-            if (syntaxTrivia.Kind() == SyntaxKind.DocumentationCommentExteriorTrivia)
+            if (syntaxTrivia.IsKind(SyntaxKind.DocumentationCommentExteriorTrivia))
             {
                 factoryMethodName = SyntaxFactoryMethod("DocumentationCommentExterior");
             }

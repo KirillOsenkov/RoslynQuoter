@@ -40,6 +40,8 @@ public class Tests
             SyntaxFactory.IdentifierName(""System""))
         .WithUsingKeyword(
             SyntaxFactory.Token(SyntaxKind.UsingKeyword))
+        .WithNamespaceOrType(
+            SyntaxFactory.IdentifierName(""System""))
         .WithSemicolonToken(
             SyntaxFactory.Token(SyntaxKind.SemicolonToken))))
 .WithEndOfFileToken(
@@ -173,6 +175,8 @@ namespace N
             SyntaxFactory.IdentifierName(""System""))
         .WithUsingKeyword(
             SyntaxFactory.Token(SyntaxKind.UsingKeyword))
+        .WithNamespaceOrType(
+            SyntaxFactory.IdentifierName(""System""))
         .WithSemicolonToken(
             SyntaxFactory.Token(SyntaxKind.SemicolonToken))))
 .WithMembers(
@@ -910,7 +914,7 @@ Console.WriteLine(nameof(@class));");
         Assert.Equal(sourceText, resultText);
     }
 
-    public void CheckSourceFiles()
+    internal void CheckSourceFiles()
     {
         var rootFolder = @"C:\roslyn-internal\Closed\Test\Files\";
         var files = Directory.GetFiles(rootFolder, "*.cs", SearchOption.AllDirectories);
@@ -920,7 +924,7 @@ Console.WriteLine(nameof(@class));");
         }
     }
 
-    public void VerifyRoundtrip(string file)
+    internal void VerifyRoundtrip(string file)
     {
         try
         {
