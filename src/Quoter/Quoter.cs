@@ -45,18 +45,6 @@ namespace RoslynQuoter
         public bool RemoveRedundantModifyingCalls { get; set; }
         public bool ShortenCodeWithUsingStatic { get; set; }
 
-        private readonly ScriptOptions options = ScriptOptions.Default
-            .AddReferences(
-                typeof(SyntaxNode).Assembly,
-                typeof(CSharpSyntaxNode).Assembly)
-            .AddReferences("System.Runtime")
-            .AddImports(
-                "System",
-                "Microsoft.CodeAnalysis",
-                "Microsoft.CodeAnalysis.CSharp",
-                "Microsoft.CodeAnalysis.CSharp.Syntax",
-                "Microsoft.CodeAnalysis.CSharp.SyntaxFactory");
-
         public Quoter()
         {
             UseDefaultFormatting = true;
