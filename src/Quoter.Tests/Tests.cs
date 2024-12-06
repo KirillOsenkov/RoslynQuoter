@@ -867,6 +867,13 @@ Console.WriteLine(nameof(@class));");
             nodeKind: NodeKind.MemberDeclaration);
     }
 
+    [Fact]
+    public void TestIssue85()
+    {
+        Test("using Foo = object;");
+        Test("using Foo = (int foo, int bar);");
+    }
+
     private void Test(
         string sourceText,
         string expected,
