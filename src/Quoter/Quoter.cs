@@ -1044,12 +1044,25 @@ namespace RoslynQuoter
                 return candidates.First();
             }
 
-            var usingDirectiveSyntax = node as UsingDirectiveSyntax;
-            if (usingDirectiveSyntax != null)
+            if (node is UsingDirectiveSyntax usingDirectiveSyntax)
             {
                 if (usingDirectiveSyntax.Alias == null)
                 {
-                    candidates = candidates.Where(m => m.ToString() != "Microsoft.CodeAnalysis.CSharp.Syntax.UsingDirectiveSyntax UsingDirective(Microsoft.CodeAnalysis.CSharp.Syntax.NameEqualsSyntax, Microsoft.CodeAnalysis.CSharp.Syntax.NameSyntax)");
+                    const string signatureWithNameSyntax = "Microsoft.CodeAnalysis.CSharp.Syntax.UsingDirectiveSyntax UsingDirective(Microsoft.CodeAnalysis.CSharp.Syntax.NameEqualsSyntax, Microsoft.CodeAnalysis.CSharp.Syntax.NameSyntax)";
+                    const string signatureWithTypeSyntax = "Microsoft.CodeAnalysis.CSharp.Syntax.UsingDirectiveSyntax UsingDirective(Microsoft.CodeAnalysis.CSharp.Syntax.NameEqualsSyntax, Microsoft.CodeAnalysis.CSharp.Syntax.TypeSyntax)";
+
+                    candidates = candidates.Where(m => m.ToString() is not (signatureWithNameSyntax or signatureWithTypeSyntax));
+                }
+                else
+                {
+                    var preferredSignature = usingDirectiveSyntax.NamespaceOrType is NameSyntax
+                        ? "Microsoft.CodeAnalysis.CSharp.Syntax.UsingDirectiveSyntax UsingDirective(Microsoft.CodeAnalysis.CSharp.Syntax.NameSyntax)"
+                        : "Microsoft.CodeAnalysis.CSharp.Syntax.UsingDirectiveSyntax UsingDirective(Microsoft.CodeAnalysis.CSharp.Syntax.TypeSyntax)";
+
+                    if (candidates.FirstOrDefault(m => m.ToString() == preferredSignature) is { } preferredMethod)
+                    {
+                        return preferredMethod;
+                    }
                 }
             }
 
