@@ -849,6 +849,12 @@ Console.WriteLine(nameof(@class));");
     }
 
     [Fact]
+    public void TestIssue87_XmlTrivia()
+    {
+        Test("/// <inheritdoc/>");
+    }
+
+    [Fact]
     public void TestRecordStruct()
     {
         Test("record struct A();",

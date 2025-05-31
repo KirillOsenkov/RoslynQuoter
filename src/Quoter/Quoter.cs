@@ -943,14 +943,14 @@ namespace RoslynQuoter
         // was so consistent that we never ran into this before. Basically it was possible for a machine to look at the
         // tree produced by the API and correctly guess how to call it to produce such a tree.
         private static readonly HashSet<string> factoryMethodsToExclude = new HashSet<string>
-    {
-        "DocumentationComment(",
-        "XmlNewLine(",
-        "XmlTextAttribute(System.String, Microsoft.CodeAnalysis.SyntaxToken[])", // TestXmlDocSummaryWithNamespace
-        "XmlTextAttribute(System.String, System.String)",
-        "XmlNameAttribute(System.String)",
-        "XmlTextAttribute(Microsoft.CodeAnalysis.CSharp.Syntax.XmlNameSyntax, Microsoft.CodeAnalysis.CSharp.SyntaxKind, Microsoft.CodeAnalysis.SyntaxTokenList)"
-    };
+        {
+            "DocumentationComment(",
+            "XmlNewLine(",
+            "XmlTextAttribute(System.String, Microsoft.CodeAnalysis.SyntaxToken[])", // TestXmlDocSummaryWithNamespace
+            "XmlTextAttribute(System.String, System.String)",
+            "XmlNameAttribute(System.String)",
+            "XmlTextAttribute(Microsoft.CodeAnalysis.CSharp.Syntax.XmlNameSyntax, Microsoft.CodeAnalysis.CSharp.SyntaxKind, Microsoft.CodeAnalysis.SyntaxTokenList)"
+        };
 
         /// <summary>
         /// Static methods on Microsoft.CodeAnalysis.CSharp.SyntaxFactory class that construct SyntaxNodes
@@ -1001,8 +1001,20 @@ namespace RoslynQuoter
 
             var staticMethods = typeof(SyntaxFactory)
                 .GetMethods(BindingFlags.Public | BindingFlags.Static)
-                .Where(m => m.GetCustomAttribute<ObsoleteAttribute>() == null &&
-                            !factoryMethodsToExclude.Any(e => m.ToString().Contains(e)));
+                .Where(m =>
+                {
+                    if (m.GetCustomAttribute<ObsoleteAttribute>() != null)
+                    {
+                        return false;
+                    }
+
+                    if (factoryMethodsToExclude.Any(e => m.ToString().Contains(e)))
+                    {
+                        return false;
+                    }
+
+                    return true;
+                });
 
             foreach (var method in staticMethods.OrderBy(m => m.ToString()))
             {
@@ -1064,6 +1076,10 @@ namespace RoslynQuoter
                         return preferredMethod;
                     }
                 }
+            }
+            else if (node is XmlEmptyElementSyntax xmlEmptyElementSyntax)
+            {
+                candidates = candidates.Where(m => m.ToString().Contains(" XmlEmptyElement("));
             }
 
             int minParameterCount = candidates.Min(m => m.GetParameters().Length);
